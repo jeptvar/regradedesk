@@ -1,0 +1,16 @@
+{
+  "name": "second-shelf-development",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/dev.mjs --seed",
+    "test": "node tools/dev.mjs --test && node tests/concurrency.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "package": "php tools/package.php"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1"
+  }
+}
