@@ -6,7 +6,7 @@ Staff receive an item against its original order, inspect it, record wear and mi
 
 **Status: 0.1.0 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
-![Second Shelf inspection with public disclosure, private notes and a separate draft action](docs/inspection.png)
+![Second Shelf inspection with public disclosure, private notes and a separate draft action](https://raw.githubusercontent.com/jeptvar/second-shelf/main/docs/inspection.png)
 
 ## The workflow
 

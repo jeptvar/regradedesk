@@ -2,6 +2,9 @@ name: Plugin checks
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  group: plugin-checks-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   integration:
     runs-on: ubuntu-latest
