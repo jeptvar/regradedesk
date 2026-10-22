@@ -6,6 +6,8 @@ Staff receive an item against its original order, inspect it, record wear and mi
 
 **Status: 0.1.0 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
+![Second Shelf inspection with public disclosure, private notes and a separate draft action](docs/inspection.png)
+
 ## The workflow
 
 1. Open **WooCommerce → Second Shelf** and find the original order by its numeric ID.
@@ -18,11 +20,11 @@ The draft contains the selected photos and disclosure, condition in its title an
 
 ## Install
 
-Download `second-shelf-0.1.0.zip` from this repository's GitHub Actions build artifact or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
+Download `second-shelf-0.1.0.zip` from [Releases](https://github.com/jeptvar/second-shelf/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
 
 Alternatively, copy this folder to `wp-content/plugins/second-shelf` and activate **Second Shelf**.
 
-Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and Second Shelf tables. SQLite / WordPress Playground is not supported. Integration baseline: WordPress 6.9.4, WooCommerce 10.7.0, MariaDB 11.4, PHP 8.3; minimum versions are declarations, not a fully tested compatibility matrix.
+Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and Second Shelf tables. SQLite / WordPress Playground is not supported. Tested pairs: WordPress 6.9.4 + WooCommerce 10.7.0, and WordPress 7.1.3 + WooCommerce 11.2.1, on MariaDB 11.4 and PHP 8.3. Minimum versions are declarations, not a fully tested compatibility matrix.
 
 ## Inventory and privacy boundaries
 
@@ -58,7 +60,7 @@ npm run package
 docker compose stop
 ```
 
-The Docker site is disposable and bound to loopback. It uses dedicated `second-shelf-dev` containers and volumes. The example order and lamp illustration contain synthetic data. The PHP integration tests create additional fixtures and must only run against this development site. They exercise real WordPress, WooCommerce and MariaDB with both legacy orders and HPOS. Browser checks cover receipt, inspection, media selection, draft review, nonce rejection, and desktop/mobile accessibility of the plugin content.
+The Docker site is disposable and bound to loopback. It uses dedicated `second-shelf-dev` containers and volumes. The example order and lamp illustration contain synthetic data. The PHP integration tests create additional fixtures and must only run against this development site. They exercise real WordPress, WooCommerce and MariaDB with both legacy orders and HPOS. Concurrent processes verify that competing requests produce one unit and one draft. Browser checks cover receipt, inspection, media selection, draft review, nonce rejection, and desktop/mobile accessibility of the plugin content.
 
 To use an installed Edge browser on Windows: set `PLAYWRIGHT_CHANNEL=msedge` when running the browser check.
 

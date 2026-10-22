@@ -3,10 +3,12 @@
  * Plugin Name: Second Shelf
  * Description: Inspect returned units and prepare traceable, single-unit resale drafts for WooCommerce.
  * Version: 0.1.0
+ * Plugin URI: https://github.com/jeptvar/second-shelf
  * Requires at least: 6.7
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
  * WC requires at least: 9.5
+ * WC tested up to: 11.2.1
  * Author: jeptvar
  * License: GPL-2.0-or-later
  * Text Domain: second-shelf

@@ -84,6 +84,11 @@ try {
     assert.equal(errors.length, 0, JSON.stringify(errors));
     writeFileSync('artifacts/browser-results.json', JSON.stringify({ passed: true, checks: ['desktop dashboard axe', 'inspection form and media picker', 'desktop/mobile inspection axe', 'mobile overflow', 'draft creation and private-note exclusion', 'nonce and anonymous access', 'no JavaScript errors'] }, null, 2));
     console.log('Browser checks passed; screenshots and results are in artifacts/.');
+} catch (error) {
+    await page.screenshot({ path: 'artifacts/browser-failure.png', fullPage: true }).catch(() => {});
+    console.error('Browser failure URL:', page.url());
+    console.error((await page.locator('body').innerText()).slice(0, 1800));
+    throw error;
 } finally {
     await browser.close();
 }

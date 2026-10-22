@@ -28,6 +28,7 @@ if (installed.status !== 0) {
     writeFileSync('artifacts/demo-login.txt', `Local development only\nhttp://localhost:8097/wp-admin/\nUser: demo\nPassword: ${password}\n`);
     console.log('Local login saved in artifacts/demo-login.txt (ignored by Git).');
 }
+wp('core', 'update-db');
 const woo = run(['run', '--rm', '-T', 'cli', 'plugin', 'is-installed', 'woocommerce'], true);
 if (woo.status !== 0) {
     process.stdout.write(wp('plugin', 'install', 'woocommerce', `--version=${process.env.SECOND_SHELF_WC_VERSION || '11.2.1'}`, '--activate').stdout);
