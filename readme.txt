@@ -1,4 +1,4 @@
-=== Second Shelf ===
+=== RegradeDesk ===
 Contributors: jeptvar
 Tags: woocommerce, returns, inventory, resale, open-box
 Requires at least: 6.7
@@ -13,7 +13,7 @@ Inspect returned units and prepare separate, traceable resale drafts with stock 
 
 == Description ==
 
-Second Shelf adds an inspection workbench under WooCommerce. Record a physical return against an original order line, document condition and missing accessories, choose public photos, and generate a separate resale draft for staff review.
+RegradeDesk adds an inspection workbench under WooCommerce. Record a physical return against an original order line, document condition and missing accessories, choose public photos, and generate a separate resale draft for staff review.
 
 Private notes stay in the inspection. The draft has its own SKU, one unit of stock and no backorders. Refunds and original inventory are never modified. Staff must reconcile any earlier restock before selling a separate resale listing.
 
@@ -23,10 +23,13 @@ Pilot release. Supports physical simple products and variations, MySQL/MariaDB w
 
 1. Activate WooCommerce.
 2. Upload the plugin ZIP through Plugins > Add New > Upload Plugin.
-3. Activate Second Shelf and open WooCommerce > Second Shelf.
+3. Activate RegradeDesk and open WooCommerce > RegradeDesk.
 4. Start on a staging store and review the inventory boundaries in README.md.
 
 == Frequently Asked Questions ==
+
+= Can I upgrade from the Second Shelf pilot? =
+Yes. Deactivate Second Shelf, then install and activate RegradeDesk. Existing inspections and resale products are retained. RegradeDesk's workbench stays disabled while the earlier plugin is active.
 
 = Does this issue refunds or restock the original item? =
 No. Handle refunds separately. Avoid double-counting units already restocked by another tool.
@@ -48,6 +51,7 @@ Inspection records and resale products are retained. Uninstall does not delete b
 == Changelog ==
 
 = 0.1.2 =
+* Renamed the plugin to RegradeDesk with the regradedesk directory slug and text domain, retaining existing inspection data and product links.
 * Prepared database identifiers and added translation context for directory review.
 * Updated package metadata and added directory screenshots.
 

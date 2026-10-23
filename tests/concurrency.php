@@ -1,5 +1,5 @@
 <?php
-use SecondShelf\Workbench as W;
+use RegradeDesk\Workbench as W;
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) { exit; }
 $admins = get_users( array( 'role' => 'administrator', 'number' => 1 ) );
 wp_set_current_user( $admins[0]->ID );

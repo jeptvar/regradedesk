@@ -9,9 +9,9 @@ const stack = minimum ? 'minimum' : 'current';
 const version = JSON.parse(readFileSync('package.json', 'utf8')).version;
 mkdirSync('artifacts', { recursive: true });
 const stage = mkdtempSync(resolve('artifacts/package-'));
-const extracted = spawnSync(process.env.PHP_BINARY || 'php', ['-r', '$z = new ZipArchive(); if ($z->open($argv[1]) !== true || !$z->extractTo($argv[2])) { exit(1); } $z->close();', resolve(`dist/second-shelf-${version}.zip`), stage], { encoding: 'utf8' });
+const extracted = spawnSync(process.env.PHP_BINARY || 'php', ['-r', '$z = new ZipArchive(); if ($z->open($argv[1]) !== true || !$z->extractTo($argv[2])) { exit(1); } $z->close();', resolve(`dist/regradedesk-${version}.zip`), stage], { encoding: 'utf8' });
 if (extracted.status !== 0) throw new Error(extracted.error?.message || extracted.stderr || extracted.stdout || 'Cannot extract release ZIP.');
-const env = { ...process.env, SECOND_SHELF_PACKAGE_DIR: join(stage, 'second-shelf') };
+const env = { ...process.env, SECOND_SHELF_PACKAGE_DIR: join(stage, 'regradedesk') };
 if (minimum) {
     env.SECOND_SHELF_VERIFY_WP = 'wordpress:6.7-php8.1-apache';
     env.SECOND_SHELF_VERIFY_CLI = 'wordpress:cli-php8.1';
@@ -32,7 +32,7 @@ try {
     if (minimum) wp('core', 'download', '--version=6.7', '--force');
     wp('core', 'install', '--url=http://wordpress', '--title=Package verification', '--admin_user=package-test', `--admin_password=${randomBytes(24).toString('base64url')}`, '--admin_email=package@example.test', '--skip-email');
     wp('plugin', 'install', 'woocommerce', `--version=${minimum ? '9.5.0' : '11.2.1'}`, '--activate');
-    wp('plugin', 'activate', 'second-shelf');
+    wp('plugin', 'activate', 'regradedesk');
     console.log(wp('plugin', 'get', 'woocommerce', '--field=version'));
     console.log(wp('core', 'version'));
     console.log(wp('eval', 'echo PHP_VERSION;'));
@@ -44,7 +44,7 @@ try {
     }
     if (!minimum) {
         wp('plugin', 'install', 'plugin-check', '--version=2.1.0', '--activate');
-        const report = wp('plugin', 'check', 'second-shelf', '--require=/var/www/html/wp-content/plugins/plugin-check/cli.php', '--format=json');
+        const report = wp('plugin', 'check', 'regradedesk', '--require=/var/www/html/wp-content/plugins/plugin-check/cli.php', '--format=json');
         writeFileSync('artifacts/plugin-check.txt', report + '\n');
         const findings = report.split(/\r?\n/).filter(line => line.startsWith('[')).flatMap(line => JSON.parse(line));
         if (findings.length || /\b(?:ERROR|WARNING)\b/.test(report)) throw new Error(`Plugin Check has findings; see artifacts/plugin-check.txt.\n${report}`);

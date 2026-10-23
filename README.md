@@ -1,4 +1,4 @@
-# Second Shelf
+# RegradeDesk
 
 Turn a returned unit into a documented, single-unit resale draft in WooCommerce.
 
@@ -6,11 +6,11 @@ Staff receive an item against its original order, inspect it, record wear and mi
 
 **Status: 0.1.2 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
-![Second Shelf inspection with public disclosure, private notes and a separate draft action](https://raw.githubusercontent.com/jeptvar/second-shelf/main/docs/inspection.png)
+![RegradeDesk inspection with public disclosure, private notes and a separate draft action](https://raw.githubusercontent.com/jeptvar/regradedesk/main/docs/inspection.png)
 
 ## The workflow
 
-1. Open **WooCommerce → Second Shelf** and find the original order by its numeric ID.
+1. Open **WooCommerce → RegradeDesk** and find the original order by its numeric ID.
 2. Choose its product line and confirm that one physical unit has arrived and is separated from sellable stock.
 3. Record the listing title, condition, resale price, buyer-facing disclosure, private notes, and up to 12 photos.
 4. Confirm the physical inspection and public suitability of the photos. Save the decision as **Ready for draft**. Unsuitable units can be marked **Not for resale**.
@@ -20,15 +20,17 @@ The draft contains the selected photos and disclosure, condition in its title an
 
 ## Install
 
-Download `second-shelf-0.1.2.zip` from [Releases](https://github.com/jeptvar/second-shelf/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
+Download `regradedesk-0.1.2.zip` from [Releases](https://github.com/jeptvar/regradedesk/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
 
-Alternatively, copy this folder to `wp-content/plugins/second-shelf` and activate **Second Shelf**.
+Alternatively, copy this folder to `wp-content/plugins/regradedesk` and activate **RegradeDesk**.
 
-Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and Second Shelf tables. SQLite / WordPress Playground is not supported. Release ZIP integration tests cover WordPress 6.7 + WooCommerce 9.5.0 on PHP 8.1, and WordPress 7.1.3 + WooCommerce 11.2.1 on PHP 8.3, with MariaDB 11.4 and both legacy orders and HPOS. CI also exercises WordPress 6.9.4 + WooCommerce 10.7.0. This is not an exhaustive matrix of every intervening version or third-party extension.
+Upgrading from the earlier **Second Shelf** pilot: deactivate Second Shelf, then install and activate RegradeDesk. Both use the existing inspection table and product links, so records are retained. RegradeDesk leaves its workbench disabled while the earlier plugin is active. The internal `second_shelf_*` storage names and `SS-` product SKUs remain unchanged for compatibility.
+
+Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and RegradeDesk tables. SQLite / WordPress Playground is not supported. Release ZIP integration tests cover WordPress 6.7 + WooCommerce 9.5.0 on PHP 8.1, and WordPress 7.1.3 + WooCommerce 11.2.1 on PHP 8.3, with MariaDB 11.4 and both legacy orders and HPOS. CI also exercises WordPress 6.9.4 + WooCommerce 10.7.0. This is not an exhaustive matrix of every intervening version or third-party extension.
 
 ## Inventory and privacy boundaries
 
-- Second Shelf does **not** refund, change order totals, restock, or decrement the original product. If WooCommerce or another returns tool already restocked a returned unit, reconcile that stock before selling a separate resale listing. Otherwise the same physical unit could be offered twice.
+- RegradeDesk does **not** refund, change order totals, restock, or decrement the original product. If WooCommerce or another returns tool already restocked a returned unit, reconcile that stock before selling a separate resale listing. Otherwise the same physical unit could be offered twice.
 - One inspection corresponds to one unit from an original order line. The total count cannot exceed that line's original whole-unit quantity. Rejected inspections still count. Recording receipt is an explicit staff action, not evidence that a shipment actually arrived.
 - Supported source orders are processing, completed or refunded, with existing physical simple products or variations. Digital products, bundles, subscriptions, fractional quantities and missing source products are outside this first version's scope.
 - Internal notes are never copied to product content or metadata. The order/item link is stored as private product metadata and in the inspection table. No public inspection API is registered.
@@ -40,9 +42,9 @@ Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supp
 
 Receipt submissions carry an idempotency identifier. A database lock serializes receipt counts per original line, and a separate lock serializes each inspection's saves and draft creation. A version field rejects stale edits.
 
-Draft creation reserves a product ID and links it to the inspection in one database transaction, then populates that same draft through WooCommerce. If a hook interrupts preparation, the record shows **Preparation incomplete**. Fix the cause and retry from the inspection. An unfinished draft cannot be published while Second Shelf is active. Do not publish incomplete placeholders after deactivating the plugin.
+Draft creation reserves a product ID and links it to the inspection in one database transaction, then populates that same draft through WooCommerce. If a hook interrupts preparation, the record shows **Preparation incomplete**. Fix the cause and retry from the inspection. An unfinished draft cannot be published while RegradeDesk is active. Do not publish incomplete placeholders after deactivating the plugin.
 
-After successful preparation, repeated requests return the same product without resetting stock or content. If a linked product is trashed or deleted, Second Shelf refuses to create a replacement. Restore it from Trash or a backup. These guarantees assume standard WordPress/WooCommerce behavior: third-party hooks that explicitly commit or alter transactions, database proxies that change connections, or direct SQL edits are unsupported.
+After successful preparation, repeated requests return the same product without resetting stock or content. If a linked product is trashed or deleted, RegradeDesk refuses to create a replacement. Restore it from Trash or a backup. These guarantees assume standard WordPress/WooCommerce behavior: third-party hooks that explicitly commit or alter transactions, database proxies that change connections, or direct SQL edits are unsupported.
 
 ## Local development and checks
 

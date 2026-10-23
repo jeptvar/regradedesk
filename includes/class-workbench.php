@@ -1,5 +1,5 @@
 <?php
-namespace SecondShelf;
+namespace RegradeDesk;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -50,7 +50,7 @@ final class Workbench {
 
     public static function authorize(): void {
         if ( ! current_user_can( 'manage_woocommerce' ) || ! current_user_can( 'edit_products' ) ) {
-            throw new \RuntimeException( esc_html__( 'You need permission to manage WooCommerce and edit products.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'You need permission to manage WooCommerce and edit products.', 'regradedesk' ) );
         }
     }
 
@@ -61,7 +61,7 @@ final class Workbench {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Connection-scoped database lock must never be cached.
         $acquired = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 5)', $name ) );
         if ( (string) $acquired !== '1' ) {
-            throw new \RuntimeException( esc_html__( 'This unit is busy, or database locking is unavailable. Please try again.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'This unit is busy, or database locking is unavailable. Please try again.', 'regradedesk' ) );
         }
         try {
             return $operation();
@@ -73,10 +73,10 @@ final class Workbench {
 
     public static function grades(): array {
         return array(
-            'open-box' => __( 'Open box', 'second-shelf' ),
-            'used-good' => __( 'Used — good', 'second-shelf' ),
-            'used-fair' => __( 'Used — fair', 'second-shelf' ),
-            'refurbished' => __( 'Refurbished', 'second-shelf' ),
+            'open-box' => __( 'Open box', 'regradedesk' ),
+            'used-good' => __( 'Used — good', 'regradedesk' ),
+            'used-fair' => __( 'Used — fair', 'regradedesk' ),
+            'refurbished' => __( 'Refurbished', 'regradedesk' ),
         );
     }
 
@@ -86,7 +86,7 @@ final class Workbench {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; read fresh state inside the unit lock.
         $row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE id = %d', self::table(), $id ), ARRAY_A );
         if ( ! $row ) {
-            throw new \RuntimeException( esc_html__( 'Inspection not found.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Inspection not found.', 'regradedesk' ) );
         }
         return $row;
     }
@@ -96,17 +96,17 @@ final class Workbench {
         $order = wc_get_order( $order_id );
         $item = $order ? $order->get_item( $item_id ) : false;
         if ( ! $order || $order->get_type() !== 'shop_order' || ! $item instanceof \WC_Order_Item_Product || (int) $item->get_order_id() !== $order_id ) {
-            throw new \RuntimeException( esc_html__( 'Choose a product line belonging to this order.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Choose a product line belonging to this order.', 'regradedesk' ) );
         }
         if ( ! $order->has_status( array( 'processing', 'completed', 'refunded' ) ) ) {
-            throw new \RuntimeException( esc_html__( 'The source order must be processing, completed, or refunded.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'The source order must be processing, completed, or refunded.', 'regradedesk' ) );
         }
         $product = $item->get_product();
         if ( ! $product || ! $product->is_type( array( 'simple', 'variation' ) ) || $product->is_virtual() || $product->is_downloadable() || $product->get_status() === 'trash' ) {
-            throw new \RuntimeException( esc_html__( 'Only existing physical simple products and variations are supported.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Only existing physical simple products and variations are supported.', 'regradedesk' ) );
         }
         if ( (float) $item->get_quantity() < 1 || floor( (float) $item->get_quantity() ) !== (float) $item->get_quantity() ) {
-            throw new \RuntimeException( esc_html__( 'Only whole-unit order quantities are supported.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Only whole-unit order quantities are supported.', 'regradedesk' ) );
         }
         return array( $order, $item, $product );
     }
@@ -114,7 +114,7 @@ final class Workbench {
     public static function receive( int $order_id, int $item_id, string $receipt_key ): int {
         self::authorize();
         if ( ! preg_match( '/^[a-f0-9-]{36}$/D', $receipt_key ) ) {
-            throw new \RuntimeException( esc_html__( 'Invalid receipt identifier. Reload the page.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Invalid receipt identifier. Reload the page.', 'regradedesk' ) );
         }
         return self::locked( 'receive:' . $order_id . ':' . $item_id, static function () use ( $order_id, $item_id, $receipt_key ) {
             global $wpdb;
@@ -123,7 +123,7 @@ final class Workbench {
             $existing = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE receipt_key = %s', $table, $receipt_key ), ARRAY_A );
             if ( $existing ) {
                 if ( (int) $existing['order_id'] !== $order_id || (int) $existing['item_id'] !== $item_id ) {
-                    throw new \RuntimeException( esc_html__( 'Receipt identifier already used for another item.', 'second-shelf' ) );
+                    throw new \RuntimeException( esc_html__( 'Receipt identifier already used for another item.', 'regradedesk' ) );
                 }
                 return (int) $existing['id'];
             }
@@ -131,7 +131,7 @@ final class Workbench {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; capacity is checked under a database lock.
             $count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE order_id = %d AND item_id = %d', $table, $order_id, $item_id ) );
             if ( $count >= (int) $item->get_quantity() ) {
-                throw new \RuntimeException( esc_html__( 'All units from this order line already have inspections, including rejected units.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'All units from this order line already have inspections, including rejected units.', 'regradedesk' ) );
             }
             $now = current_time( 'mysql', true );
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table write through the escaping wpdb insert API.
@@ -143,7 +143,7 @@ final class Workbench {
                 'received_at' => $now, 'updated_at' => $now,
             ) );
             if ( false === $result ) {
-                throw new \RuntimeException( esc_html__( 'Could not save the inspection.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Could not save the inspection.', 'regradedesk' ) );
             }
             return (int) $wpdb->insert_id;
         } );
@@ -155,24 +155,24 @@ final class Workbench {
         $data['updated_at'] = current_time( 'mysql', true );
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table write through the escaping wpdb update API.
         if ( false === $wpdb->update( self::table(), $data, array( 'id' => $id ) ) ) {
-            throw new \RuntimeException( esc_html__( 'Could not update the inspection.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Could not update the inspection.', 'regradedesk' ) );
         }
     }
 
     private static function validate_ready( array $row ): void {
         if ( ! isset( self::grades()[ $row['grade'] ] ) || ! trim( $row['listing_title'] ) || ! trim( $row['disclosure'] ) || ! $row['inspected'] ) {
-            throw new \RuntimeException( esc_html__( 'Add a title, condition and buyer-facing disclosure, and confirm physical inspection.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Add a title, condition and buyer-facing disclosure, and confirm physical inspection.', 'regradedesk' ) );
         }
         if ( ! is_numeric( $row['price'] ) || (float) $row['price'] <= 0 || ! is_finite( (float) $row['price'] ) ) {
-            throw new \RuntimeException( esc_html__( 'Set a resale price greater than zero.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Set a resale price greater than zero.', 'regradedesk' ) );
         }
         $photos = json_decode( $row['photo_ids'], true );
         if ( ! $photos || ! $row['photos_confirmed'] ) {
-            throw new \RuntimeException( esc_html__( 'Choose at least one photo and confirm it is suitable for public display.', 'second-shelf' ) );
+            throw new \RuntimeException( esc_html__( 'Choose at least one photo and confirm it is suitable for public display.', 'regradedesk' ) );
         }
         foreach ( $photos as $photo ) {
             if ( get_post_status( $photo ) === 'trash' || get_post_type( $photo ) !== 'attachment' || ! in_array( get_post_mime_type( $photo ), array( 'image/jpeg', 'image/png', 'image/webp', 'image/gif' ), true ) || ! current_user_can( 'edit_post', $photo ) ) {
-                throw new \RuntimeException( esc_html__( 'A selected photo is unavailable or you cannot use it. Choose accessible JPEG, PNG, WebP or GIF images.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'A selected photo is unavailable or you cannot use it. Choose accessible JPEG, PNG, WebP or GIF images.', 'regradedesk' ) );
             }
         }
     }
@@ -182,23 +182,23 @@ final class Workbench {
         self::locked( 'unit:' . $id, static function () use ( $id, $version, $input ) {
             $row = self::get( $id );
             if ( (int) $row['version'] !== $version ) {
-                throw new \RuntimeException( esc_html__( 'Another save changed this inspection. Reload before editing.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Another save changed this inspection. Reload before editing.', 'regradedesk' ) );
             }
             if ( in_array( $row['state'], array( 'building', 'listed' ), true ) ) {
-                throw new \RuntimeException( esc_html__( 'This inspection is frozen because a resale product has been reserved. Edit the product separately.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'This inspection is frozen because a resale product has been reserved. Edit the product separately.', 'regradedesk' ) );
             }
             $state = sanitize_key( $input['state'] ?? 'received' );
             $grade = sanitize_key( $input['grade'] ?? '' );
             if ( ! in_array( $state, array( 'received', 'ready', 'rejected' ), true ) || ( $grade !== '' && ! isset( self::grades()[ $grade ] ) ) ) {
-                throw new \RuntimeException( esc_html__( 'Invalid inspection state or condition.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Invalid inspection state or condition.', 'regradedesk' ) );
             }
             $photo_ids = array_values( array_unique( array_filter( array_map( 'absint', explode( ',', (string) ( $input['photo_ids'] ?? '' ) ) ) ) ) );
             if ( count( $photo_ids ) > 12 ) {
-                throw new \RuntimeException( esc_html__( 'Choose up to 12 photos.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Choose up to 12 photos.', 'regradedesk' ) );
             }
             $raw_price = trim( (string) ( $input['price'] ?? '' ) );
             if ( $raw_price !== '' && ! preg_match( '/^\d+(?:[.,]\d+)?$/D', $raw_price ) ) {
-                throw new \RuntimeException( esc_html__( 'Enter a plain price, without currency symbols or thousands separators.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Enter a plain price, without currency symbols or thousands separators.', 'regradedesk' ) );
             }
             $data = array(
                 'state' => $state, 'grade' => $grade,
@@ -225,7 +225,7 @@ final class Workbench {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Engine verification must inspect actual tables before using transactions.
             $status = $wpdb->get_row( $wpdb->prepare( 'SHOW TABLE STATUS LIKE %s', $wpdb->esc_like( $table ) ) );
             if ( ! $status || strtolower( (string) $status->Engine ) !== 'innodb' ) {
-                throw new \RuntimeException( esc_html__( 'Draft creation requires InnoDB tables for posts, metadata and Second Shelf.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Draft creation requires InnoDB tables for posts, metadata and RegradeDesk.', 'regradedesk' ) );
             }
         }
     }
@@ -236,34 +236,34 @@ final class Workbench {
             global $wpdb;
             $row = self::get( $id );
             if ( $row['product_id'] && ! current_user_can( 'edit_post', (int) $row['product_id'] ) ) {
-                throw new \RuntimeException( esc_html__( 'You cannot edit the reserved resale product.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'You cannot edit the reserved resale product.', 'regradedesk' ) );
             }
             if ( $row['state'] === 'listed' ) {
                 if ( get_post_type( (int) $row['product_id'] ) !== 'product' || get_post_status( (int) $row['product_id'] ) === 'trash' ) {
-                    throw new \RuntimeException( esc_html__( 'The linked product was deleted or trashed. Restore it; a second listing will not be created.', 'second-shelf' ) );
+                    throw new \RuntimeException( esc_html__( 'The linked product was deleted or trashed. Restore it; a second listing will not be created.', 'regradedesk' ) );
                 }
                 return (int) $row['product_id'];
             }
             if ( (int) $row['version'] !== $version || ! in_array( $row['state'], array( 'ready', 'building' ), true ) ) {
-                throw new \RuntimeException( esc_html__( 'Save a ready inspection, then reload before creating its draft.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'Save a ready inspection, then reload before creating its draft.', 'regradedesk' ) );
             }
             self::validate_ready( $row );
             $source = wc_get_product( (int) $row['source_product_id'] );
             if ( ! $source || $source->get_status() === 'trash' || ! $source->is_type( array( 'simple', 'variation' ) ) || $source->is_virtual() || $source->is_downloadable() ) {
-                throw new \RuntimeException( esc_html__( 'The original physical product is unavailable or no longer supported. Restore it before creating the resale draft.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'The original physical product is unavailable or no longer supported. Restore it before creating the resale draft.', 'regradedesk' ) );
             }
             if ( ! $row['product_id'] ) {
                 self::require_transactions();
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Atomic reservation requires a transaction on this connection.
                 if ( false === $wpdb->query( 'START TRANSACTION' ) ) {
-                    throw new \RuntimeException( esc_html__( 'Could not start the draft reservation transaction.', 'second-shelf' ) );
+                    throw new \RuntimeException( esc_html__( 'Could not start the draft reservation transaction.', 'regradedesk' ) );
                 }
                 try {
                     // Reserve the post and record link before WooCommerce hooks can interrupt population.
                     $product_id = wp_insert_post( array(
                         'post_type' => 'product', 'post_status' => 'draft',
                         /* translators: %d: inspection identifier. */
-                        'post_title' => sprintf( __( 'Second Shelf unit #%d — preparation incomplete', 'second-shelf' ), $id ),
+                        'post_title' => sprintf( __( 'RegradeDesk unit #%d — preparation incomplete', 'regradedesk' ), $id ),
                         'post_author' => get_current_user_id(),
                         'meta_input' => array( '_second_shelf_unit' => $id ),
                     ), true );
@@ -273,7 +273,7 @@ final class Workbench {
                     self::write( $id, array( 'product_id' => $product_id, 'state' => 'building', 'version' => $version + 1 ) );
                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Commit the atomic product and inspection reservation.
                     if ( false === $wpdb->query( 'COMMIT' ) ) {
-                        throw new \RuntimeException( esc_html__( 'Could not commit the draft reservation.', 'second-shelf' ) );
+                        throw new \RuntimeException( esc_html__( 'Could not commit the draft reservation.', 'regradedesk' ) );
                     }
                     $row = self::get( $id );
                 } catch ( \Throwable $error ) {
@@ -287,7 +287,7 @@ final class Workbench {
             }
             $product_id = (int) $row['product_id'];
             if ( get_post_type( $product_id ) !== 'product' || get_post_status( $product_id ) !== 'draft' || (int) get_post_meta( $product_id, '_second_shelf_unit', true ) !== $id ) {
-                throw new \RuntimeException( esc_html__( 'The reserved draft was changed or removed. Restore that draft before retrying.', 'second-shelf' ) );
+                throw new \RuntimeException( esc_html__( 'The reserved draft was changed or removed. Restore that draft before retrying.', 'regradedesk' ) );
             }
             $product = new \WC_Product_Simple( $product_id );
             $product->set_name( $row['listing_title'] . ' — ' . self::grades()[ $row['grade'] ] );

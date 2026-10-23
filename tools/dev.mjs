@@ -23,7 +23,7 @@ if (!ready) throw new Error('WordPress files did not become ready.');
 const installed = run(['run', '--rm', '-T', 'cli', 'core', 'is-installed'], true);
 if (installed.status !== 0) {
     const password = randomBytes(18).toString('base64url');
-    wp('core', 'install', '--url=http://localhost:8097', '--title=Second Shelf Demo', '--admin_user=demo', `--admin_password=${password}`, '--admin_email=demo@example.test', '--skip-email');
+    wp('core', 'install', '--url=http://localhost:8097', '--title=RegradeDesk Demo', '--admin_user=demo', `--admin_password=${password}`, '--admin_email=demo@example.test', '--skip-email');
     mkdirSync('artifacts', { recursive: true });
     writeFileSync('artifacts/demo-login.txt', `Local development only\nhttp://localhost:8097/wp-admin/\nUser: demo\nPassword: ${password}\n`);
     console.log('Local login saved in artifacts/demo-login.txt (ignored by Git).');
@@ -35,7 +35,7 @@ if (woo.status !== 0) {
 } else {
     wp('plugin', 'activate', 'woocommerce');
 }
-wp('plugin', 'activate', 'second-shelf');
+wp('plugin', 'activate', 'regradedesk');
 wp('option', 'update', 'woocommerce_onboarding_profile', '{"completed":true}', '--format=json');
 wp('option', 'update', 'woocommerce_store_address', 'Demo only');
 wp('option', 'update', 'woocommerce_default_country', 'US:CA');
@@ -47,9 +47,9 @@ if (process.argv.includes('--test')) {
         wp('wc', 'hpos', 'sync');
         wp('option', 'update', 'woocommerce_custom_orders_table_enabled', hpos);
         console.log(`Integration tests: HPOS ${hpos}`);
-        process.stdout.write(wp('eval-file', 'wp-content/plugins/second-shelf/tests/integration.php').stdout);
+        process.stdout.write(wp('eval-file', 'wp-content/plugins/regradedesk/tests/integration.php').stdout);
     }
 }
 if (process.argv.includes('--seed')) {
-    process.stdout.write(wp('eval-file', 'wp-content/plugins/second-shelf/tests/seed.php').stdout);
+    process.stdout.write(wp('eval-file', 'wp-content/plugins/regradedesk/tests/seed.php').stdout);
 }

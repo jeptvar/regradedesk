@@ -2,10 +2,12 @@
 
 Maintainer account: `jeptvar` (confirmed by the owner).
 
+Display name: **RegradeDesk**. Requested slug and text domain: `regradedesk`. Former pilot name: Second Shelf. The old database table, options and product metadata keys are intentionally retained for compatibility.
+
 ## Package and assets
 
 - Build the installable archive with `npm run package`.
-- Upload only `dist/second-shelf-0.1.2.zip`, not a GitHub source archive.
+- Upload only `dist/regradedesk-0.1.2.zip`, not a GitHub source archive.
 - The package contains the runtime PHP, CSS and JavaScript, GPL license, readme.txt and README.md. Development tools, tests, fixtures, credentials, screenshots and Docker files are excluded.
 - `.wordpress-org/` contains the two screenshots referenced by readme.txt, 772×250 and 1544×500 banners, and 128×128, 256×256 and SVG icons. These are original project assets under GPL-2.0-or-later. Screenshots use synthetic local fixtures.
 - Directory assets belong in the approved SVN repository's top-level `assets/`, not the plugin's runtime `assets/` folder. See the [official asset guide](https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/).

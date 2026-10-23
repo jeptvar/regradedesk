@@ -1,5 +1,5 @@
 <?php
-namespace SecondShelf;
+namespace RegradeDesk;
 /** Workbench list view. Included only after capability checks. */
 // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside Admin::dashboard(); these variables are method-local.
 defined( 'ABSPATH' ) || exit;
@@ -26,32 +26,32 @@ if ( $state ) {
 ?>
 <section id="ss-receive" class="postbox ss-receive" aria-labelledby="ss-receive-title">
     <div class="ss-receive-intro">
-        <h2 id="ss-receive-title"><?php esc_html_e( 'Receive a returned unit', 'second-shelf' ); ?></h2>
-        <p class="description"><?php esc_html_e( 'Find the original order to start an inspection. Record each returned unit separately.', 'second-shelf' ); ?></p>
+        <h2 id="ss-receive-title"><?php esc_html_e( 'Receive a returned unit', 'regradedesk' ); ?></h2>
+        <p class="description"><?php esc_html_e( 'Find the original order to start an inspection. Record each returned unit separately.', 'regradedesk' ); ?></p>
     </div>
     <form method="get" class="ss-lookup">
         <input type="hidden" name="page" value="second-shelf">
-        <label for="ss-order"><?php esc_html_e( 'Order ID', 'second-shelf' ); ?></label>
+        <label for="ss-order"><?php esc_html_e( 'Order ID', 'regradedesk' ); ?></label>
         <div class="ss-lookup-controls">
-            <input id="ss-order" name="order_id" type="number" min="1" required placeholder="<?php esc_attr_e( 'e.g. 1042', 'second-shelf' ); ?>" value="<?php echo esc_attr( $order_id ?: '' ); ?>">
-            <button class="button"><?php esc_html_e( 'Find order', 'second-shelf' ); ?></button>
+            <input id="ss-order" name="order_id" type="number" min="1" required placeholder="<?php esc_attr_e( 'e.g. 1042', 'regradedesk' ); ?>" value="<?php echo esc_attr( $order_id ?: '' ); ?>">
+            <button class="button"><?php esc_html_e( 'Find order', 'regradedesk' ); ?></button>
         </div>
     </form>
     <?php if ( $order_id ) : ?>
         <div class="ss-order-result">
         <?php $order = wc_get_order( $order_id ); ?>
         <?php if ( ! $order || $order->get_type() !== 'shop_order' ) : ?>
-            <p role="alert"><?php esc_html_e( 'Order not found. Use its numeric database ID.', 'second-shelf' ); ?></p>
+            <p role="alert"><?php esc_html_e( 'Order not found. Use its numeric database ID.', 'regradedesk' ); ?></p>
         <?php else : ?>
             <?php /* translators: %s: order number. */ ?>
-            <p><a href="<?php echo esc_url( $order->get_edit_order_url() ); ?>"><?php echo esc_html( sprintf( __( 'Open order #%s', 'second-shelf' ), $order->get_order_number() ) ); ?></a> &middot; <?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></p>
+            <p><a href="<?php echo esc_url( $order->get_edit_order_url() ); ?>"><?php echo esc_html( sprintf( __( 'Open order #%s', 'regradedesk' ), $order->get_order_number() ) ); ?></a> &middot; <?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></p>
             <?php self::form( 'receive' ); ?>
                 <input type="hidden" name="order_id" value="<?php echo esc_attr( $order_id ); ?>">
                 <input type="hidden" name="receipt_key" value="<?php echo esc_attr( wp_generate_uuid4() ); ?>">
                 <div class="ss-field">
-                    <label for="ss-item"><?php esc_html_e( 'Returned item', 'second-shelf' ); ?></label>
+                    <label for="ss-item"><?php esc_html_e( 'Returned item', 'regradedesk' ); ?></label>
                     <select id="ss-item" name="item_id" required>
-                        <option value=""><?php esc_html_e( 'Choose an order line', 'second-shelf' ); ?></option>
+                        <option value=""><?php esc_html_e( 'Choose an order line', 'regradedesk' ); ?></option>
                         <?php foreach ( $order->get_items() as $item_id => $item ) : ?>
                             <?php
                             // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Current custom-table receipt count; receive() rechecks under a database lock.
@@ -59,13 +59,13 @@ if ( $state ) {
                             $remaining = max( 0, (int) $item->get_quantity() - $count );
                             ?>
                             <?php /* translators: %d: number of units without an inspection. */ ?>
-                            <option value="<?php echo esc_attr( $item_id ); ?>" <?php disabled( $remaining, 0 ); ?>><?php echo esc_html( $item->get_name() . ' — ' . sprintf( __( '%d units unrecorded', 'second-shelf' ), $remaining ) ); ?></option>
+                            <option value="<?php echo esc_attr( $item_id ); ?>" <?php disabled( $remaining, 0 ); ?>><?php echo esc_html( $item->get_name() . ' — ' . sprintf( __( '%d units unrecorded', 'regradedesk' ), $remaining ) ); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <p><label><input type="checkbox" name="received_confirmed" value="1" required> <?php esc_html_e( 'This unit has physically arrived and is separated from sellable stock.', 'second-shelf' ); ?></label></p>
-                <p class="description"><?php esc_html_e( 'Second Shelf does not refund or restock the original order. If a refund already restocked this unit, reconcile that stock before selling it separately.', 'second-shelf' ); ?></p>
-                <p><button class="button button-primary"><?php esc_html_e( 'Start inspection', 'second-shelf' ); ?></button></p>
+                <p><label><input type="checkbox" name="received_confirmed" value="1" required> <?php esc_html_e( 'This unit has physically arrived and is separated from sellable stock.', 'regradedesk' ); ?></label></p>
+                <p class="description"><?php esc_html_e( 'RegradeDesk does not refund or restock the original order. If a refund already restocked this unit, reconcile that stock before selling it separately.', 'regradedesk' ); ?></p>
+                <p><button class="button button-primary"><?php esc_html_e( 'Start inspection', 'regradedesk' ); ?></button></p>
             </form>
         <?php endif; ?>
         </div>
@@ -73,34 +73,34 @@ if ( $state ) {
 </section>
 
 <section class="ss-list" aria-labelledby="ss-list-title">
-    <h2 id="ss-list-title" class="screen-reader-text"><?php esc_html_e( 'Inspection workbench', 'second-shelf' ); ?></h2>
+    <h2 id="ss-list-title" class="screen-reader-text"><?php esc_html_e( 'Inspection workbench', 'regradedesk' ); ?></h2>
     <div class="ss-list-toolbar">
-        <ul class="subsubsub ss-filters" aria-label="<?php esc_attr_e( 'Filter inspections by status', 'second-shelf' ); ?>">
-            <li><a href="<?php echo esc_url( self::url() ); ?>" <?php echo $state === '' ? 'class="current" aria-current="page"' : ''; ?>><?php esc_html_e( 'All', 'second-shelf' ); ?> <span class="count">(<?php echo esc_html( $all_count ); ?>)</span></a></li>
+        <ul class="subsubsub ss-filters" aria-label="<?php esc_attr_e( 'Filter inspections by status', 'regradedesk' ); ?>">
+            <li><a href="<?php echo esc_url( self::url() ); ?>" <?php echo $state === '' ? 'class="current" aria-current="page"' : ''; ?>><?php esc_html_e( 'All', 'regradedesk' ); ?> <span class="count">(<?php echo esc_html( $all_count ); ?>)</span></a></li>
             <?php foreach ( self::states() as $key => $label ) : ?>
                 <li><span class="ss-filter-divider" aria-hidden="true">|</span> <a href="<?php echo esc_url( self::url( array( 'state' => $key ) ) ); ?>" <?php echo $state === $key ? 'class="current" aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?> <span class="count">(<?php echo esc_html( $counts[ $key ]->total ?? 0 ); ?>)</span></a></li>
             <?php endforeach; ?>
         </ul>
         <?php /* translators: %s: localized number of inspections. */ ?>
-        <span class="displaying-num"><?php echo esc_html( sprintf( _n( '%s item', '%s items', $total, 'second-shelf' ), number_format_i18n( $total ) ) ); ?></span>
+        <span class="displaying-num"><?php echo esc_html( sprintf( _n( '%s item', '%s items', $total, 'regradedesk' ), number_format_i18n( $total ) ) ); ?></span>
     </div>
     <?php if ( ! $rows ) : ?>
         <div class="ss-empty">
             <span class="dashicons dashicons-archive" aria-hidden="true"></span>
-            <h3><?php echo esc_html( $state ? __( 'No inspections with this status', 'second-shelf' ) : __( 'No inspections yet', 'second-shelf' ) ); ?></h3>
-            <p><?php echo esc_html( $state ? __( 'Choose another status to see your recorded units.', 'second-shelf' ) : __( 'Find an order above to receive your first returned unit.', 'second-shelf' ) ); ?></p>
-            <?php if ( $state ) : ?><a class="button" href="<?php echo esc_url( self::url() ); ?>"><?php esc_html_e( 'View all inspections', 'second-shelf' ); ?></a><?php endif; ?>
+            <h3><?php echo esc_html( $state ? __( 'No inspections with this status', 'regradedesk' ) : __( 'No inspections yet', 'regradedesk' ) ); ?></h3>
+            <p><?php echo esc_html( $state ? __( 'Choose another status to see your recorded units.', 'regradedesk' ) : __( 'Find an order above to receive your first returned unit.', 'regradedesk' ) ); ?></p>
+            <?php if ( $state ) : ?><a class="button" href="<?php echo esc_url( self::url() ); ?>"><?php esc_html_e( 'View all inspections', 'regradedesk' ); ?></a><?php endif; ?>
         </div>
     <?php else : ?>
-        <div class="ss-table-scroll" tabindex="0" role="region" aria-label="<?php esc_attr_e( 'Inspections', 'second-shelf' ); ?>">
+        <div class="ss-table-scroll" tabindex="0" role="region" aria-label="<?php esc_attr_e( 'Inspections', 'regradedesk' ); ?>">
             <table class="wp-list-table widefat fixed striped ss-table">
                 <thead><tr>
-                    <th scope="col" class="ss-col-unit"><?php esc_html_e( 'Unit', 'second-shelf' ); ?></th>
-                    <th scope="col" class="ss-col-order"><?php esc_html_e( 'Source order', 'second-shelf' ); ?></th>
-                    <th scope="col" class="ss-col-status"><?php esc_html_e( 'Status', 'second-shelf' ); ?></th>
-                    <th scope="col" class="ss-col-condition"><?php esc_html_e( 'Condition', 'second-shelf' ); ?></th>
-                    <th scope="col" class="ss-col-price"><?php esc_html_e( 'Resale price', 'second-shelf' ); ?></th>
-                    <th scope="col" class="ss-col-date"><?php esc_html_e( 'Received (UTC)', 'second-shelf' ); ?></th>
+                    <th scope="col" class="ss-col-unit"><?php esc_html_e( 'Unit', 'regradedesk' ); ?></th>
+                    <th scope="col" class="ss-col-order"><?php esc_html_e( 'Source order', 'regradedesk' ); ?></th>
+                    <th scope="col" class="ss-col-status"><?php esc_html_e( 'Status', 'regradedesk' ); ?></th>
+                    <th scope="col" class="ss-col-condition"><?php esc_html_e( 'Condition', 'regradedesk' ); ?></th>
+                    <th scope="col" class="ss-col-price"><?php esc_html_e( 'Resale price', 'regradedesk' ); ?></th>
+                    <th scope="col" class="ss-col-date"><?php esc_html_e( 'Received (UTC)', 'regradedesk' ); ?></th>
                 </tr></thead>
                 <tbody>
                 <?php foreach ( $rows as $unit ) : ?>
@@ -110,9 +110,9 @@ if ( $state ) {
                             <div class="ss-unit-cell">
                                 <div class="ss-thumbnail" aria-hidden="true"><?php echo $photos ? wp_get_attachment_image( $photos[0], 'thumbnail', false, array( 'alt' => '' ) ) : '<span class="dashicons dashicons-format-image"></span>'; ?></div>
                                 <?php /* translators: %d: inspection identifier. */ ?>
-                                <div><a class="row-title" href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php echo esc_html( $unit['listing_title'] ?: sprintf( __( 'Returned unit #%d', 'second-shelf' ), $unit['id'] ) ); ?></a>
+                                <div><a class="row-title" href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php echo esc_html( $unit['listing_title'] ?: sprintf( __( 'Returned unit #%d', 'regradedesk' ), $unit['id'] ) ); ?></a>
                                     <?php /* translators: %d: inspection identifier. */ ?>
-                                    <div class="ss-row-meta"><?php echo esc_html( sprintf( __( 'Unit #%d', 'second-shelf' ), $unit['id'] ) ); ?> <span aria-hidden="true">&middot;</span> <a href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php esc_html_e( 'View inspection', 'second-shelf' ); ?></a></div>
+                                    <div class="ss-row-meta"><?php echo esc_html( sprintf( __( 'Unit #%d', 'regradedesk' ), $unit['id'] ) ); ?> <span aria-hidden="true">&middot;</span> <a href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php esc_html_e( 'View inspection', 'regradedesk' ); ?></a></div>
                                 </div>
                             </div>
                         </td>
@@ -127,8 +127,8 @@ if ( $state ) {
             </table>
         </div>
         <div class="tablenav bottom ss-table-footer">
-            <span class="description"><?php esc_html_e( 'Each inspection represents one physical unit.', 'second-shelf' ); ?></span>
-            <nav class="ss-pagination" aria-label="<?php esc_attr_e( 'Inspection pages', 'second-shelf' ); ?>"><?php echo wp_kses_post( paginate_links( array( 'base' => add_query_arg( 'paged', '%#%', self::url( array( 'state' => $state ) ) ), 'format' => '', 'current' => $page, 'total' => (int) ceil( $total / 20 ) ) ) ); ?></nav>
+            <span class="description"><?php esc_html_e( 'Each inspection represents one physical unit.', 'regradedesk' ); ?></span>
+            <nav class="ss-pagination" aria-label="<?php esc_attr_e( 'Inspection pages', 'regradedesk' ); ?>"><?php echo wp_kses_post( paginate_links( array( 'base' => add_query_arg( 'paged', '%#%', self::url( array( 'state' => $state ) ) ), 'format' => '', 'current' => $page, 'total' => (int) ceil( $total / 20 ) ) ) ); ?></nav>
         </div>
     <?php endif; ?>
 </section>

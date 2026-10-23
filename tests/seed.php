@@ -1,6 +1,6 @@
 <?php
 /** Synthetic fixtures for the disposable local demo, never a live shop. */
-use SecondShelf\Workbench as W;
+use RegradeDesk\Workbench as W;
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) { exit; }
 if ( get_option( 'second_shelf_demo' ) ) {
     WP_CLI::success( 'Demo already seeded.' );

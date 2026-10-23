@@ -10,8 +10,8 @@ const wp = (...args) => {
     if (r.status !== 0) throw new Error(r.stderr + r.stdout);
     return r.stdout.trim();
 };
-wp('eval-file', 'wp-content/plugins/second-shelf/tests/seed.php');
-const fixture = JSON.parse(wp('eval-file', 'wp-content/plugins/second-shelf/tests/browser-fixture.php'));
+wp('eval-file', 'wp-content/plugins/regradedesk/tests/seed.php');
+const fixture = JSON.parse(wp('eval-file', 'wp-content/plugins/regradedesk/tests/browser-fixture.php'));
 const credentials = readFileSync('artifacts/demo-login.txt', 'utf8');
 const username = credentials.match(/^User: (.+)$/m)[1];
 const password = credentials.match(/^Password: (.+)$/m)[1];
@@ -27,7 +27,7 @@ try {
     await page.locator('#user_pass').fill(password);
     await Promise.all([page.waitForURL('**/wp-admin/**'), page.locator('#wp-submit').click()]);
     await page.goto(`${base}/wp-admin/admin.php?page=second-shelf`);
-    await page.getByRole('heading', { name: 'Second Shelf', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'RegradeDesk', exact: true }).waitFor();
     await page.screenshot({ path: 'artifacts/workbench-desktop.png', fullPage: true, animations: 'disabled' });
     const dashboard = await new AxeBuilder({ page }).include('.ss-wrap').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     assert.equal(dashboard.violations.length, 0, JSON.stringify(dashboard.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))));

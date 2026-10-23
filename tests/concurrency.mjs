@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
 
 const worker = operation => new Promise((resolve, reject) => {
-    const process = spawn('docker', ['compose', 'run', '--rm', '-T', 'cli', 'eval-file', 'wp-content/plugins/second-shelf/tests/concurrency.php', operation]);
+    const process = spawn('docker', ['compose', 'run', '--rm', '-T', 'cli', 'eval-file', 'wp-content/plugins/regradedesk/tests/concurrency.php', operation]);
     let out = '', err = '';
     process.stdout.on('data', data => { out += data; });
     process.stderr.on('data', data => { err += data; });

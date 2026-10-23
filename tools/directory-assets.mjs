@@ -24,7 +24,7 @@ try {
         await page.setContent(`<style>html,body{margin:0}svg{width:100%;height:100%}</style>${icon}`);
         await page.screenshot({ path: `.wordpress-org/icon-${size}x${size}.png` });
     }
-    const banner = `<style>*{box-sizing:border-box}html,body{margin:0}body{width:772px;height:250px;background:#f0f6fc;font:16px Arial,sans-serif;color:#1d2327;display:flex;align-items:center;padding:42px;gap:32px}.mark{width:132px;height:132px;flex:none}.mark svg{width:100%;height:100%}h1{font-size:46px;letter-spacing:-1.5px;margin:0 0 12px;font-weight:700}p{font-size:19px;margin:0 0 16px;line-height:1.4}.meta{font-size:13px;color:#50575e;letter-spacing:1.5px}</style><div class="mark">${icon}</div><div><h1>Second Shelf</h1><p>Inspect returns. Prepare resale drafts.</p><div class="meta">BUILT FOR WOOCOMMERCE</div></div>`;
+    const banner = `<style>*{box-sizing:border-box}html,body{margin:0}body{width:772px;height:250px;background:#f0f6fc;font:16px Arial,sans-serif;color:#1d2327;display:flex;align-items:center;padding:42px;gap:32px}.mark{width:132px;height:132px;flex:none}.mark svg{width:100%;height:100%}h1{font-size:46px;letter-spacing:-1.5px;margin:0 0 12px;font-weight:700}p{font-size:19px;margin:0 0 16px;line-height:1.4}.meta{font-size:13px;color:#50575e;letter-spacing:1.5px}</style><div class="mark">${icon}</div><div><h1>RegradeDesk</h1><p>Inspect returns. Prepare resale drafts.</p><div class="meta">BUILT FOR WOOCOMMERCE</div></div>`;
     for (const scale of [1, 2]) {
         const art = await browser.newContext({ viewport: { width: 772, height: 250 }, deviceScaleFactor: scale });
         const canvas = await art.newPage();
