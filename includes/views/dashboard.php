@@ -1,18 +1,28 @@
 <?php
 namespace SecondShelf;
 /** Workbench list view. Included only after capability checks. */
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside Admin::dashboard(); these variables are method-local.
 defined( 'ABSPATH' ) || exit;
 global $wpdb;
 $table = Workbench::table();
-$counts = $wpdb->get_results( "SELECT state, COUNT(*) AS total FROM $table GROUP BY state", OBJECT_K );
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; staff need current work queues.
+$counts = $wpdb->get_results( $wpdb->prepare( 'SELECT state, COUNT(*) AS total FROM %i GROUP BY state', $table ), OBJECT_K );
 $all_count = array_sum( array_map( static fn( $count ) => (int) $count->total, $counts ) );
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter after capability checks.
 $state = sanitize_key( self::scalar( $_GET, 'state' ) );
 $state = isset( self::states()[ $state ] ) ? $state : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only order lookup after capability checks.
 $order_id = absint( self::scalar( $_GET, 'order_id' ) );
-$where = $state ? $wpdb->prepare( ' WHERE state = %s', $state ) : '';
+// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination after capability checks.
 $page = max( 1, absint( self::scalar( $_GET, 'paged', '1' ) ) );
-$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table$where" );
-$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table$where ORDER BY id DESC LIMIT 20 OFFSET %d", ( $page - 1 ) * 20 ), ARRAY_A );
+$total = $state ? (int) ( $counts[ $state ]->total ?? 0 ) : $all_count;
+if ( $state ) {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; show current work queues without stale state caches.
+    $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE state = %s ORDER BY id DESC LIMIT 20 OFFSET %d', $table, $state, ( $page - 1 ) * 20 ), ARRAY_A );
+} else {
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; show current work queues without stale state caches.
+    $rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT 20 OFFSET %d', $table, ( $page - 1 ) * 20 ), ARRAY_A );
+}
 ?>
 <section id="ss-receive" class="postbox ss-receive" aria-labelledby="ss-receive-title">
     <div class="ss-receive-intro">
@@ -33,6 +43,7 @@ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table$where ORDER BY
         <?php if ( ! $order || $order->get_type() !== 'shop_order' ) : ?>
             <p role="alert"><?php esc_html_e( 'Order not found. Use its numeric database ID.', 'second-shelf' ); ?></p>
         <?php else : ?>
+            <?php /* translators: %s: order number. */ ?>
             <p><a href="<?php echo esc_url( $order->get_edit_order_url() ); ?>"><?php echo esc_html( sprintf( __( 'Open order #%s', 'second-shelf' ), $order->get_order_number() ) ); ?></a> &middot; <?php echo esc_html( wc_get_order_status_name( $order->get_status() ) ); ?></p>
             <?php self::form( 'receive' ); ?>
                 <input type="hidden" name="order_id" value="<?php echo esc_attr( $order_id ); ?>">
@@ -43,9 +54,11 @@ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table$where ORDER BY
                         <option value=""><?php esc_html_e( 'Choose an order line', 'second-shelf' ); ?></option>
                         <?php foreach ( $order->get_items() as $item_id => $item ) : ?>
                             <?php
-                            $count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $table WHERE item_id = %d AND order_id = %d", $item_id, $order_id ) );
+                            // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Current custom-table receipt count; receive() rechecks under a database lock.
+                            $count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE item_id = %d AND order_id = %d', $table, $item_id, $order_id ) );
                             $remaining = max( 0, (int) $item->get_quantity() - $count );
                             ?>
+                            <?php /* translators: %d: number of units without an inspection. */ ?>
                             <option value="<?php echo esc_attr( $item_id ); ?>" <?php disabled( $remaining, 0 ); ?>><?php echo esc_html( $item->get_name() . ' — ' . sprintf( __( '%d units unrecorded', 'second-shelf' ), $remaining ) ); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -68,6 +81,7 @@ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table$where ORDER BY
                 <li><span class="ss-filter-divider" aria-hidden="true">|</span> <a href="<?php echo esc_url( self::url( array( 'state' => $key ) ) ); ?>" <?php echo $state === $key ? 'class="current" aria-current="page"' : ''; ?>><?php echo esc_html( $label ); ?> <span class="count">(<?php echo esc_html( $counts[ $key ]->total ?? 0 ); ?>)</span></a></li>
             <?php endforeach; ?>
         </ul>
+        <?php /* translators: %s: localized number of inspections. */ ?>
         <span class="displaying-num"><?php echo esc_html( sprintf( _n( '%s item', '%s items', $total, 'second-shelf' ), number_format_i18n( $total ) ) ); ?></span>
     </div>
     <?php if ( ! $rows ) : ?>
@@ -95,7 +109,9 @@ $rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $table$where ORDER BY
                         <td class="ss-col-unit">
                             <div class="ss-unit-cell">
                                 <div class="ss-thumbnail" aria-hidden="true"><?php echo $photos ? wp_get_attachment_image( $photos[0], 'thumbnail', false, array( 'alt' => '' ) ) : '<span class="dashicons dashicons-format-image"></span>'; ?></div>
+                                <?php /* translators: %d: inspection identifier. */ ?>
                                 <div><a class="row-title" href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php echo esc_html( $unit['listing_title'] ?: sprintf( __( 'Returned unit #%d', 'second-shelf' ), $unit['id'] ) ); ?></a>
+                                    <?php /* translators: %d: inspection identifier. */ ?>
                                     <div class="ss-row-meta"><?php echo esc_html( sprintf( __( 'Unit #%d', 'second-shelf' ), $unit['id'] ) ); ?> <span aria-hidden="true">&middot;</span> <a href="<?php echo esc_url( self::url( array( 'unit' => $unit['id'] ) ) ); ?>"><?php esc_html_e( 'View inspection', 'second-shelf' ); ?></a></div>
                                 </div>
                             </div>

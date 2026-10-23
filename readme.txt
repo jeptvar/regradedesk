@@ -2,9 +2,9 @@
 Contributors: jeptvar
 Tags: woocommerce, returns, inventory, resale, open-box
 Requires at least: 6.7
-Tested up to: 7.1.3
+Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 Requires Plugins: woocommerce
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -40,7 +40,16 @@ No. Staff review and publish through the WooCommerce product editor.
 = What happens when the plugin is removed? =
 Inspection records and resale products are retained. Uninstall does not delete business records or attachments. Back up and manage retention through your site's existing process.
 
+== Screenshots ==
+
+1. Inspection workbench with status filters, condition and resale prices.
+2. Inspect a returned unit, choose public photos and prepare a separate resale draft.
+
 == Changelog ==
+
+= 0.1.2 =
+* Prepared database identifiers and added translation context for directory review.
+* Updated package metadata and added directory screenshots.
 
 = 0.1.1 =
 * Refined WordPress admin layout with native controls, compact list filters, product thumbnails, condition and resale price columns.

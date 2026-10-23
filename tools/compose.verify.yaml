@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: package-test-only
+      MARIADB_ROOT_PASSWORD: package-root-only
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    volumes:
+      - db:/var/lib/mysql
+  wordpress:
+    image: ${SECOND_SHELF_VERIFY_WP:-wordpress:7.1.3-php8.3-apache}
+    environment: &environment
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: package-test-only
+      WORDPRESS_DB_NAME: wordpress
+    volumes: &volumes
+      - wordpress:/var/www/html
+      - ${SECOND_SHELF_PACKAGE_DIR:?Extract the release ZIP first}:/var/www/html/wp-content/plugins/second-shelf:ro
+      - ../tests:/second-shelf-tests:ro
+    depends_on:
+      db:
+        condition: service_healthy
+  cli:
+    image: ${SECOND_SHELF_VERIFY_CLI:-wordpress:cli-php8.3}
+    entrypoint: [wp]
+    user: '33:33'
+    environment: *environment
+    volumes: *volumes
+    depends_on:
+      - wordpress
+volumes:
+  db:
+  wordpress:

@@ -4,7 +4,7 @@ Turn a returned unit into a documented, single-unit resale draft in WooCommerce.
 
 Staff receive an item against its original order, inspect it, record wear and missing accessories, choose public photos, and prepare a separate product. The original order remains intact. Internal notes stay in the inspection record.
 
-**Status: 0.1.1 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
+**Status: 0.1.2 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
 ![Second Shelf inspection with public disclosure, private notes and a separate draft action](https://raw.githubusercontent.com/jeptvar/second-shelf/main/docs/inspection.png)
 
@@ -20,11 +20,11 @@ The draft contains the selected photos and disclosure, condition in its title an
 
 ## Install
 
-Download `second-shelf-0.1.1.zip` from [Releases](https://github.com/jeptvar/second-shelf/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
+Download `second-shelf-0.1.2.zip` from [Releases](https://github.com/jeptvar/second-shelf/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
 
 Alternatively, copy this folder to `wp-content/plugins/second-shelf` and activate **Second Shelf**.
 
-Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and Second Shelf tables. SQLite / WordPress Playground is not supported. Tested pairs: WordPress 6.9.4 + WooCommerce 10.7.0, and WordPress 7.1.3 + WooCommerce 11.2.1, on MariaDB 11.4 and PHP 8.3. Minimum versions are declarations, not a fully tested compatibility matrix.
+Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supporting `GET_LOCK`. Draft reservations require InnoDB for the posts, postmeta, and Second Shelf tables. SQLite / WordPress Playground is not supported. Release ZIP integration tests cover WordPress 6.7 + WooCommerce 9.5.0 on PHP 8.1, and WordPress 7.1.3 + WooCommerce 11.2.1 on PHP 8.3, with MariaDB 11.4 and both legacy orders and HPOS. CI also exercises WordPress 6.9.4 + WooCommerce 10.7.0. This is not an exhaustive matrix of every intervening version or third-party extension.
 
 ## Inventory and privacy boundaries
 
@@ -57,6 +57,8 @@ npm test
 npx playwright install chromium
 npm run test:browser
 npm run package
+npm run test:package
+npm run test:minimum
 docker compose stop
 ```
 
@@ -65,6 +67,10 @@ The Docker site is disposable and bound to loopback. It uses dedicated `second-s
 To use an installed Edge browser on Windows: set `PLAYWRIGHT_CHANNEL=msedge` when running the browser check.
 
 `php tools/package.php` builds an allowlisted ZIP; tests, Docker configuration, credentials, node modules and screenshots are excluded.
+
+Package checks extract that ZIP into a fresh directory and mount it read-only in isolated Docker projects. They run integration tests against the shipped files; the current stack also runs official Plugin Check 2.1.0 with runtime checks enabled. Each invocation removes only its own temporary containers and volumes. Results are saved under `artifacts/`. If PHP is a Windows batch shim, set `PHP_BINARY` to the real `php.exe` path for these Node scripts.
+
+Directory screenshots, banners and icons live in `.wordpress-org/`; see [publication notes](docs/wordpress-org.md). They belong in the WordPress.org SVN repository's top-level `assets/`, separately from the installable plugin.
 
 ## Pilot questions
 

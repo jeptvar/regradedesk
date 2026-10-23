@@ -1,6 +1,7 @@
 <?php
 namespace SecondShelf;
 /** Single inspection. Included in Admin scope after capability checks. */
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Included inside Admin::detail(); these variables are method-local.
 defined( 'ABSPATH' ) || exit;
 $id = (int) $row['id'];
 $frozen = in_array( $row['state'], array( 'building', 'listed' ), true );
@@ -25,6 +26,7 @@ $photos = json_decode( $row['photo_ids'], true ) ?: array();
                             <?php endforeach; ?>
                             </select>
                         </div>
+                        <?php /* translators: %s: store currency code. */ ?>
                         <?php $this->input( 'price', sprintf( __( 'Resale price (%s)', 'second-shelf' ), get_woocommerce_currency() ), $row['price'] ); ?>
                     </div>
                     <?php $this->textarea( 'disclosure', __( 'What the buyer should know', 'second-shelf' ), $row['disclosure'], __( 'Describe wear, testing, included accessories and missing parts. This becomes the product description.', 'second-shelf' ) ); ?>

@@ -53,3 +53,28 @@ jobs:
       - name: Stop test containers
         if: always()
         run: docker compose down
+  package:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: [current, minimum]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: zip
+      - run: npm run package
+      - name: Verify installable ZIP
+        run: node tools/verify-package.mjs ${{ matrix.stack == 'minimum' && '--minimum' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-evidence-${{ matrix.stack }}
+          path: |
+            artifacts/package-*.log
+            artifacts/plugin-check.txt

@@ -20,9 +20,9 @@ final class Admin {
         if ( $hook !== 'woocommerce_page_second-shelf' ) {
             return;
         }
-        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', SECOND_SHELF_FILE ), array(), '0.1.1' );
+        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', SECOND_SHELF_FILE ), array(), '0.1.2' );
         wp_enqueue_media();
-        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', SECOND_SHELF_FILE ), array( 'jquery', 'media-views' ), '0.1.1', true );
+        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', SECOND_SHELF_FILE ), array( 'jquery', 'media-views' ), '0.1.2', true );
         wp_localize_script( 'second-shelf', 'secondShelf', array(
             'title' => __( 'Choose public resale photos', 'second-shelf' ),
             'button' => __( 'Use these photos', 'second-shelf' ),
@@ -42,7 +42,7 @@ final class Admin {
     public function handle(): void {
         try {
             Workbench::authorize();
-            if ( ( $_SERVER['REQUEST_METHOD'] ?? '' ) !== 'POST' ) {
+            if ( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) !== 'POST' ) {
                 throw new \RuntimeException( __( 'Use the inspection form to make changes.', 'second-shelf' ) );
             }
             check_admin_referer( 'second_shelf_action' );
@@ -78,7 +78,8 @@ final class Admin {
             return $data;
         }
         global $wpdb;
-        $state = $wpdb->get_var( $wpdb->prepare( 'SELECT state FROM ' . Workbench::table() . ' WHERE product_id = %d', $postarr['ID'] ) );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; publication must use the current committed state.
+        $state = $wpdb->get_var( $wpdb->prepare( 'SELECT state FROM %i WHERE product_id = %d', Workbench::table(), $postarr['ID'] ) );
         if ( $state && $state !== 'listed' ) {
             $data['post_status'] = 'draft';
         }
@@ -90,7 +91,8 @@ final class Admin {
             return;
         }
         global $wpdb;
-        $row = $wpdb->get_row( $wpdb->prepare( 'SELECT id, state FROM ' . Workbench::table() . ' WHERE product_id = %d', $post->ID ), ARRAY_A );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Custom inspection table; show the current reservation and recovery state.
+        $row = $wpdb->get_row( $wpdb->prepare( 'SELECT id, state FROM %i WHERE product_id = %d', Workbench::table(), $post->ID ), ARRAY_A );
         if ( ! $row ) {
             return;
         }
@@ -117,10 +119,13 @@ final class Admin {
     public function page(): void {
         try {
             Workbench::authorize();
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation after capability checks; mutations use handle() and a nonce.
             $id = absint( self::scalar( $_GET, 'unit' ) );
+            /* translators: %d: inspection identifier. */
             echo '<div class="wrap ss-wrap"><div class="ss-page-heading"><h1 class="wp-heading-inline">' . esc_html( $id ? sprintf( __( 'Inspection #%d', 'second-shelf' ), $id ) : __( 'Second Shelf', 'second-shelf' ) ) . '</h1>';
             echo '<a class="page-title-action" href="' . esc_url( $id ? self::url() : '#ss-receive' ) . '">' . esc_html( $id ? __( 'All inspections', 'second-shelf' ) : __( 'Receive return', 'second-shelf' ) ) . '</a></div><hr class="wp-header-end">';
             echo '<p class="ss-page-description">' . esc_html__( 'Inspect returned units and prepare resale listings for review.', 'second-shelf' ) . '</p>';
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Displays a static notice only.
             if ( isset( $_GET['saved'] ) ) {
                 echo '<div class="notice notice-success inline"><p>' . esc_html__( 'Inspection saved.', 'second-shelf' ) . '</p></div>';
             }
