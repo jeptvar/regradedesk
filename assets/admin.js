@@ -12,8 +12,13 @@
             document.getElementById('ss-unsaved').textContent = secondShelf.unsaved;
         }
     };
-    field.closest('form').addEventListener('input', markDirty);
-    field.closest('form').addEventListener('change', markDirty);
+    // The decision control lives in the sidebar and belongs to the form via its form attribute.
+    const inspectionForm = field.form;
+    const onEdit = function (event) {
+        if (event.target.form === inspectionForm) markDirty();
+    };
+    document.addEventListener('input', onEdit);
+    document.addEventListener('change', onEdit);
     let frame;
     $('#ss-select-photos').on('click', function () {
         if (!frame) {

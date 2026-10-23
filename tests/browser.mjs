@@ -28,9 +28,21 @@ try {
     await Promise.all([page.waitForURL('**/wp-admin/**'), page.locator('#wp-submit').click()]);
     await page.goto(`${base}/wp-admin/admin.php?page=second-shelf`);
     await page.getByRole('heading', { name: 'Second Shelf', exact: true }).waitFor();
-    await page.screenshot({ path: 'artifacts/workbench-desktop.png', fullPage: true });
+    await page.screenshot({ path: 'artifacts/workbench-desktop.png', fullPage: true, animations: 'disabled' });
     const dashboard = await new AxeBuilder({ page }).include('.ss-wrap').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
     assert.equal(dashboard.violations.length, 0, JSON.stringify(dashboard.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))));
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: 'artifacts/workbench-mobile.png', fullPage: true, animations: 'disabled' });
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'Dashboard fits mobile viewport');
+    const dashboardMobile = await new AxeBuilder({ page }).include('.ss-wrap').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
+    assert.equal(dashboardMobile.violations.length, 0, JSON.stringify(dashboardMobile.violations.map(v => v.id)));
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.getByRole('link', { name: /^Needs inspection \(/ }).click();
+    assert.equal(new URL(page.url()).searchParams.get('state'), 'received');
+    assert.equal(await page.locator('.ss-filters [aria-current="page"]').count(), 1);
+    for (const text of await page.locator('.ss-table .ss-badge').allTextContents()) assert.equal(text, 'Needs inspection');
+    await page.goto(`${base}/wp-admin/admin.php?page=second-shelf`);
 
     await page.getByLabel('Order ID', { exact: true }).fill(String(fixture.order));
     await Promise.all([page.waitForNavigation(), page.getByRole('button', { name: 'Find order', exact: true }).click()]);
@@ -54,12 +66,20 @@ try {
         await page.getByLabel('I reviewed these photos').check();
         await page.getByLabel('I physically inspected').check();
         await page.getByLabel('Inspection decision').selectOption('ready');
-        await Promise.all([page.waitForURL('**&saved=1'), page.getByRole('button', { name: 'Save inspection', exact: true }).click()]);
-        await page.screenshot({ path: 'artifacts/inspection-desktop.png', fullPage: true });
+        await Promise.all([page.waitForNavigation(), page.getByRole('button', { name: 'Save inspection', exact: true }).click()]);
+        await page.locator('#ss-create-draft').waitFor();
+        assert.equal(await page.getByLabel('Inspection decision').inputValue(), 'ready', 'Sidebar decision is included in the saved form');
+        await page.getByLabel('Inspection decision').selectOption('received');
+        assert(await page.locator('#ss-create-draft').isDisabled(), 'Unsaved sidebar changes disable draft creation');
+        await page.getByLabel('Inspection decision').selectOption('ready');
+        await Promise.all([page.waitForNavigation(), page.getByRole('button', { name: 'Save inspection', exact: true }).click()]);
+        await page.locator('#ss-create-draft').waitFor();
+        assert(await page.locator('#ss-create-draft').isEnabled());
+        await page.screenshot({ path: 'artifacts/inspection-desktop.png', fullPage: true, animations: 'disabled' });
         const detail = await new AxeBuilder({ page }).include('.ss-wrap').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         assert.equal(detail.violations.length, 0, JSON.stringify(detail.violations.map(v => v.id)));
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.screenshot({ path: 'artifacts/inspection-mobile.png', fullPage: true });
+        await page.screenshot({ path: 'artifacts/inspection-mobile.png', fullPage: true, animations: 'disabled' });
         const mobile = await new AxeBuilder({ page }).include('.ss-wrap').withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze();
         assert.equal(mobile.violations.length, 0, JSON.stringify(mobile.violations.map(v => v.id)));
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'No mobile horizontal overflow');
@@ -82,7 +102,7 @@ try {
     assert(publicResponse.url().includes('wp-login.php'), 'Anonymous visitor redirected to login');
     await customer.close();
     assert.equal(errors.length, 0, JSON.stringify(errors));
-    writeFileSync('artifacts/browser-results.json', JSON.stringify({ passed: true, checks: ['desktop dashboard axe', 'inspection form and media picker', 'desktop/mobile inspection axe', 'mobile overflow', 'draft creation and private-note exclusion', 'nonce and anonymous access', 'no JavaScript errors'] }, null, 2));
+    writeFileSync('artifacts/browser-results.json', JSON.stringify({ passed: true, checks: ['desktop/mobile dashboard axe and overflow', 'status filters', 'inspection form and media picker', 'sidebar decision/save and unsaved-change protection', 'desktop/mobile inspection axe', 'mobile overflow', 'draft creation and private-note exclusion', 'nonce and anonymous access', 'no JavaScript errors'] }, null, 2));
     console.log('Browser checks passed; screenshots and results are in artifacts/.');
 } catch (error) {
     await page.screenshot({ path: 'artifacts/browser-failure.png', fullPage: true }).catch(() => {});
