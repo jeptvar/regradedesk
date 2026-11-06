@@ -2,7 +2,7 @@
 /**
  * Plugin Name: RegradeDesk
  * Description: Inspect returned units and prepare traceable, single-unit resale drafts for WooCommerce.
- * Version: 0.1.2
+ * Version: 0.1.3
  * Plugin URI: https://github.com/jeptvar/regradedesk
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -27,12 +27,20 @@ add_action( 'before_woocommerce_init', static function () {
 add_action( 'plugins_loaded', static function () {
     if ( class_exists( '\\SecondShelf\\Workbench', false ) ) {
         add_action( 'admin_notices', static function () {
+            $screen = get_current_screen();
+            if ( ! current_user_can( 'activate_plugins' ) || ! $screen || $screen->id !== 'plugins' ) {
+                return;
+            }
             echo '<div class="notice notice-warning"><p>' . esc_html__( 'Deactivate the earlier Second Shelf plugin to enable RegradeDesk. Your existing inspections and resale products will be retained.', 'regradedesk' ) . '</p></div>';
         } );
         return;
     }
     if ( ! class_exists( 'WooCommerce' ) ) {
         add_action( 'admin_notices', static function () {
+            $screen = get_current_screen();
+            if ( ! current_user_can( 'activate_plugins' ) || ! $screen || $screen->id !== 'plugins' ) {
+                return;
+            }
             echo '<div class="notice notice-warning"><p>' . esc_html__( 'RegradeDesk requires WooCommerce to be active.', 'regradedesk' ) . '</p></div>';
         } );
         return;

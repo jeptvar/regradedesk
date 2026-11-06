@@ -4,7 +4,7 @@ Tags: woocommerce, returns, inventory, resale, open-box
 Requires at least: 6.7
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.1.2
+Stable tag: 0.1.3
 Requires Plugins: woocommerce
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -49,6 +49,9 @@ Inspection records and resale products are retained. Uninstall does not delete b
 2. Inspect a returned unit, choose public photos and prepare a separate resale draft.
 
 == Changelog ==
+
+= 0.1.3 =
+* Limited dependency and legacy-plugin notices to the Plugins screen for users who can activate plugins.
 
 = 0.1.2 =
 * Renamed the plugin to RegradeDesk with the regradedesk directory slug and text domain, retaining existing inspection data and product links.

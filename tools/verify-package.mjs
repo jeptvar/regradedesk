@@ -36,6 +36,10 @@ try {
     console.log(wp('plugin', 'get', 'woocommerce', '--field=version'));
     console.log(wp('core', 'version'));
     console.log(wp('eval', 'echo PHP_VERSION;'));
+    for (const scenario of ['missing', 'legacy', 'resolved']) {
+        const skipped = scenario === 'missing' ? 'regradedesk,woocommerce' : 'regradedesk';
+        console.log(wp(`--skip-plugins=${skipped}`, 'eval-file', '/second-shelf-tests/admin-notices.php', scenario));
+    }
     for (const hpos of ['no', 'yes']) {
         wp('wc', minimum ? 'cot' : 'hpos', 'sync');
         wp('option', 'update', 'woocommerce_custom_orders_table_enabled', hpos);

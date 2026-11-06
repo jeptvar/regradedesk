@@ -20,9 +20,9 @@ final class Admin {
         if ( $hook !== 'woocommerce_page_second-shelf' ) {
             return;
         }
-        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', REGRADEDESK_FILE ), array(), '0.1.2' );
+        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', REGRADEDESK_FILE ), array(), '0.1.3' );
         wp_enqueue_media();
-        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', REGRADEDESK_FILE ), array( 'jquery', 'media-views' ), '0.1.2', true );
+        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', REGRADEDESK_FILE ), array( 'jquery', 'media-views' ), '0.1.3', true );
         wp_localize_script( 'second-shelf', 'secondShelf', array(
             'title' => __( 'Choose public resale photos', 'regradedesk' ),
             'button' => __( 'Use these photos', 'regradedesk' ),

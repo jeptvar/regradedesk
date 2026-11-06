@@ -4,7 +4,7 @@ Turn a returned unit into a documented, single-unit resale draft in WooCommerce.
 
 Staff receive an item against its original order, inspect it, record wear and missing accessories, choose public photos, and prepare a separate product. The original order remains intact. Internal notes stay in the inspection record.
 
-**Status: 0.1.2 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
+**Status: 0.1.3 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
 ![RegradeDesk inspection with public disclosure, private notes and a separate draft action](https://raw.githubusercontent.com/jeptvar/regradedesk/main/docs/inspection.png)
 
@@ -20,7 +20,7 @@ The draft contains the selected photos and disclosure, condition in its title an
 
 ## Install
 
-Download `regradedesk-0.1.2.zip` from [Releases](https://github.com/jeptvar/regradedesk/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
+Download `regradedesk-0.1.3.zip` from [Releases](https://github.com/jeptvar/regradedesk/releases) or build it with `php tools/package.php`. In WordPress use **Plugins → Add New → Upload Plugin**, choose that ZIP, and activate it with WooCommerce active.
 
 Alternatively, copy this folder to `wp-content/plugins/regradedesk` and activate **RegradeDesk**.
 
