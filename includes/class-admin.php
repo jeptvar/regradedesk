@@ -20,9 +20,9 @@ final class Admin {
         if ( $hook !== 'woocommerce_page_second-shelf' ) {
             return;
         }
-        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', REGRADEDESK_FILE ), array(), '0.1.3' );
+        wp_enqueue_style( 'second-shelf', plugins_url( 'assets/admin.css', REGRADEDESK_FILE ), array(), '0.1.4' );
         wp_enqueue_media();
-        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', REGRADEDESK_FILE ), array( 'jquery', 'media-views' ), '0.1.3', true );
+        wp_enqueue_script( 'second-shelf', plugins_url( 'assets/admin.js', REGRADEDESK_FILE ), array( 'jquery', 'media-views' ), '0.1.4', true );
         wp_localize_script( 'second-shelf', 'secondShelf', array(
             'title' => __( 'Choose public resale photos', 'regradedesk' ),
             'button' => __( 'Use these photos', 'regradedesk' ),
@@ -63,6 +63,8 @@ final class Admin {
                 Workbench::save( $id, absint( self::scalar( $data, 'version' ) ), $data );
             } elseif ( $action === 'create' ) {
                 Workbench::create_draft( $id, absint( self::scalar( $data, 'version' ) ) );
+            } elseif ( $action === 'repair' ) {
+                Workbench::repair( $id, absint( self::scalar( $data, 'version' ) ) );
             } else {
                 throw new \RuntimeException( __( 'Unknown action.', 'regradedesk' ) );
             }
@@ -113,7 +115,7 @@ final class Admin {
     }
 
     private static function states(): array {
-        return array( 'received' => __( 'Needs inspection', 'regradedesk' ), 'ready' => __( 'Ready for draft', 'regradedesk' ), 'building' => __( 'Preparation incomplete', 'regradedesk' ), 'listed' => __( 'Draft created', 'regradedesk' ), 'rejected' => __( 'Not for resale', 'regradedesk' ) );
+        return array( 'received' => __( 'Needs inspection', 'regradedesk' ), 'ready' => __( 'Ready for draft', 'regradedesk' ), 'building' => __( 'Preparation incomplete', 'regradedesk' ), 'repairing' => __( 'Repairing inspection', 'regradedesk' ), 'listed' => __( 'Draft created', 'regradedesk' ), 'rejected' => __( 'Not for resale', 'regradedesk' ) );
     }
 
     public function page(): void {

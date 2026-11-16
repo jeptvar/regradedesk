@@ -39,6 +39,42 @@ if ( $operation === 'receive' ) {
     // Stretch the overlap window while keeping the actual service and database in use.
     add_action( 'woocommerce_before_product_object_save', static function () { usleep( 500000 ); } );
     WP_CLI::line( 'DRAFT:' . W::create_draft( $fixture['unit'], 2 ) );
+} elseif ( $operation === 'interrupt' ) {
+    $fail = static function () { throw new RuntimeException( 'Race fixture interruption' ); };
+    add_action( 'woocommerce_before_product_object_save', $fail );
+    try { W::create_draft( $fixture['unit'], 2 ); } catch ( RuntimeException $error ) {
+        if ( $error->getMessage() !== 'Race fixture interruption' ) { throw $error; }
+    } finally { remove_action( 'woocommerce_before_product_object_save', $fail ); }
+    $row = W::get( $fixture['unit'] );
+    $fixture['reserved'] = (int) $row['product_id'];
+    $fixture['version'] = (int) $row['version'];
+    update_option( 'ss_race_fixture', $fixture );
+    WP_CLI::line( 'INTERRUPTED' );
+} elseif ( in_array( $operation, array( 'repair', 'retry' ), true ) ) {
+    try {
+        if ( $operation === 'repair' ) {
+            W::repair( $fixture['unit'], $fixture['version'] );
+            WP_CLI::line( 'REPAIR' );
+        } else {
+            add_action( 'woocommerce_before_product_object_save', static function () { usleep( 500000 ); } );
+            WP_CLI::line( 'DRAFT:' . W::create_draft( $fixture['unit'], $fixture['version'] ) );
+        }
+    } catch ( RuntimeException $error ) {
+        if ( ! str_contains( $error->getMessage(), 'Only an incomplete' ) && ! str_contains( $error->getMessage(), 'Save a ready' ) ) { throw $error; }
+        WP_CLI::line( 'STALE' );
+    }
+} elseif ( $operation === 'finish-repair' ) {
+    $row = W::get( $fixture['unit'] );
+    if ( (int) $row['product_id'] !== $fixture['reserved'] ) { throw new RuntimeException( 'Reservation changed during race.' ); }
+    if ( $row['state'] === 'repairing' ) {
+        $input = array_merge( $row, array( 'state' => 'ready', 'photo_ids' => implode( ',', json_decode( $row['photo_ids'], true ) ) ) );
+        W::save( $fixture['unit'], (int) $row['version'], $input );
+        $row = W::get( $fixture['unit'] );
+        if ( W::create_draft( $fixture['unit'], (int) $row['version'] ) !== $fixture['reserved'] ) { throw new RuntimeException( 'Repair replaced the product.' ); }
+    } elseif ( $row['state'] !== 'listed' ) {
+        throw new RuntimeException( 'Unexpected state after race.' );
+    }
+    WP_CLI::line( 'FINISHED' );
 } elseif ( $operation === 'verify' ) {
     global $wpdb;
     $count = (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . W::table() . ' WHERE order_id = %d', $fixture['order'] ) );

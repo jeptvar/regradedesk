@@ -187,7 +187,14 @@ final class Workbench {
             if ( in_array( $row['state'], array( 'building', 'listed' ), true ) ) {
                 throw new \RuntimeException( esc_html__( 'This inspection is frozen because a resale product has been reserved. Edit the product separately.', 'regradedesk' ) );
             }
+            $repairing = $row['state'] === 'repairing';
+            if ( $repairing ) {
+                self::require_reserved_draft( $row );
+            }
             $state = sanitize_key( $input['state'] ?? 'received' );
+            if ( $repairing && $state !== 'ready' ) {
+                throw new \RuntimeException( esc_html__( 'Complete the repaired inspection and save it as ready before retrying the reserved draft.', 'regradedesk' ) );
+            }
             $grade = sanitize_key( $input['grade'] ?? '' );
             if ( ! in_array( $state, array( 'received', 'ready', 'rejected' ), true ) || ( $grade !== '' && ! isset( self::grades()[ $grade ] ) ) ) {
                 throw new \RuntimeException( esc_html__( 'Invalid inspection state or condition.', 'regradedesk' ) );
@@ -201,7 +208,7 @@ final class Workbench {
                 throw new \RuntimeException( esc_html__( 'Enter a plain price, without currency symbols or thousands separators.', 'regradedesk' ) );
             }
             $data = array(
-                'state' => $state, 'grade' => $grade,
+                'state' => $repairing ? 'building' : $state, 'grade' => $grade,
                 'listing_title' => sanitize_text_field( $input['listing_title'] ?? '' ),
                 'disclosure' => sanitize_textarea_field( $input['disclosure'] ?? '' ),
                 'private_notes' => sanitize_textarea_field( $input['private_notes'] ?? '' ),
@@ -216,6 +223,29 @@ final class Workbench {
             }
             self::write( $id, $data );
         } );
+    }
+
+    /** Reopen incomplete inputs without releasing or replacing the reserved product. */
+    public static function repair( int $id, int $version ): void {
+        self::authorize();
+        self::locked( 'unit:' . $id, static function () use ( $id, $version ) {
+            $row = self::get( $id );
+            if ( (int) $row['version'] !== $version || $row['state'] !== 'building' ) {
+                throw new \RuntimeException( esc_html__( 'Only an incomplete preparation can be repaired. Reload this inspection.', 'regradedesk' ) );
+            }
+            self::require_reserved_draft( $row );
+            self::write( $id, array( 'state' => 'repairing', 'version' => $version + 1 ) );
+        } );
+    }
+
+    private static function require_reserved_draft( array $row ): void {
+        $product_id = (int) $row['product_id'];
+        if ( ! current_user_can( 'edit_post', $product_id ) ) {
+            throw new \RuntimeException( esc_html__( 'You cannot edit the reserved resale product.', 'regradedesk' ) );
+        }
+        if ( get_post_type( $product_id ) !== 'product' || get_post_status( $product_id ) !== 'draft' || (int) get_post_meta( $product_id, '_second_shelf_unit', true ) !== (int) $row['id'] ) {
+            throw new \RuntimeException( esc_html__( 'The reserved draft was changed or removed. Restore that draft before retrying.', 'regradedesk' ) );
+        }
     }
 
     /** Ensure the draft reservation and its durable record link can commit together. */
@@ -286,9 +316,7 @@ final class Workbench {
                 }
             }
             $product_id = (int) $row['product_id'];
-            if ( get_post_type( $product_id ) !== 'product' || get_post_status( $product_id ) !== 'draft' || (int) get_post_meta( $product_id, '_second_shelf_unit', true ) !== $id ) {
-                throw new \RuntimeException( esc_html__( 'The reserved draft was changed or removed. Restore that draft before retrying.', 'regradedesk' ) );
-            }
+            self::require_reserved_draft( $row );
             $product = new \WC_Product_Simple( $product_id );
             $product->set_name( $row['listing_title'] . ' — ' . self::grades()[ $row['grade'] ] );
             $product->set_status( 'draft' );

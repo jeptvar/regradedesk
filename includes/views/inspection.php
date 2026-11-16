@@ -5,6 +5,7 @@ namespace RegradeDesk;
 defined( 'ABSPATH' ) || exit;
 $id = (int) $row['id'];
 $frozen = in_array( $row['state'], array( 'building', 'listed' ), true );
+$repairing = $row['state'] === 'repairing';
 $order = wc_get_order( (int) $row['order_id'] );
 $photos = json_decode( $row['photo_ids'], true ) ?: array();
 ?>
@@ -65,18 +66,18 @@ $photos = json_decode( $row['photo_ids'], true ) ?: array();
                         <label for="ss-state"><?php esc_html_e( 'Inspection decision', 'regradedesk' ); ?></label>
                         <select id="ss-state" name="state" form="ss-inspection-form">
                             <?php foreach ( self::states() as $key => $label ) : ?>
-                                <?php if ( in_array( $key, array( 'building', 'listed' ), true ) ) { continue; } ?>
-                                <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $row['state'], $key ); ?>><?php echo esc_html( $label ); ?></option>
+                                <?php if ( in_array( $key, array( 'building', 'repairing', 'listed' ), true ) || ( $repairing && $key !== 'ready' ) ) { continue; } ?>
+                                <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $repairing ? 'ready' : $row['state'], $key ); ?>><?php echo esc_html( $label ); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <p class="description"><?php esc_html_e( 'Choose “Ready for draft” once the inspection, price and photos are complete.', 'regradedesk' ); ?></p>
+                        <p class="description"><?php echo $repairing ? esc_html__( 'Correct the inspection details or replace missing photos, then save the repairs. The same draft stays reserved.', 'regradedesk' ) : esc_html__( 'Choose “Ready for draft” once the inspection, price and photos are complete.', 'regradedesk' ); ?></p>
                     </div>
                 <?php else : ?>
-                    <p class="description"><?php esc_html_e( 'This inspection is saved as a record. Make any listing changes in the resale product.', 'regradedesk' ); ?></p>
+                    <p class="description"><?php echo $row['state'] === 'building' ? esc_html__( 'Preparation is incomplete. Retry it, or choose “Repair inspection” to correct the saved details.', 'regradedesk' ) : esc_html__( 'This inspection is saved as a record. Make any listing changes in the resale product.', 'regradedesk' ); ?></p>
                 <?php endif; ?>
             </div>
             <?php if ( ! $frozen ) : ?>
-                <div class="ss-actions"><span class="description"><?php esc_html_e( 'Saves inspection only', 'regradedesk' ); ?></span><button type="submit" form="ss-inspection-form" class="button button-primary"><?php esc_html_e( 'Save inspection', 'regradedesk' ); ?></button></div>
+                <div class="ss-actions"><span class="description"><?php esc_html_e( 'Saves inspection only', 'regradedesk' ); ?></span><button type="submit" form="ss-inspection-form" class="button button-primary"><?php echo $repairing ? esc_html__( 'Save repairs', 'regradedesk' ) : esc_html__( 'Save inspection', 'regradedesk' ); ?></button></div>
             <?php endif; ?>
         </section>
         <section class="postbox">
@@ -98,6 +99,14 @@ $photos = json_decode( $row['photo_ids'], true ) ?: array();
                     <button id="ss-create-draft" class="button"><?php echo esc_html( $row['state'] === 'building' ? __( 'Retry draft preparation', 'regradedesk' ) : __( 'Create resale draft', 'regradedesk' ) ); ?></button>
                     <p id="ss-unsaved" role="status"></p>
                 </form>
+                <?php if ( $row['state'] === 'building' ) : ?>
+                    <?php self::form( 'repair', $id, (int) $row['version'] ); ?>
+                    <p><button class="button"><?php esc_html_e( 'Repair inspection', 'regradedesk' ); ?></button></p>
+                    <p class="description"><?php esc_html_e( 'Replace unavailable photos or correct inspection details, then retry the same draft. Retrying replaces its listing fields with the saved inspection.', 'regradedesk' ); ?></p>
+                    </form>
+                <?php endif; ?>
+            <?php elseif ( $repairing ) : ?>
+                <p><?php esc_html_e( 'Save the repaired inspection before retrying preparation. The reserved product cannot be published until preparation completes.', 'regradedesk' ); ?></p>
             <?php else : ?>
                 <p class="description"><?php esc_html_e( 'A resale draft becomes available after you save the inspection as “Ready for draft”.', 'regradedesk' ); ?></p>
                 <button class="button" disabled><?php esc_html_e( 'Create resale draft', 'regradedesk' ); ?></button>

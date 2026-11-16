@@ -2,7 +2,7 @@
 /**
  * Plugin Name: RegradeDesk
  * Description: Inspect returned units and prepare traceable, single-unit resale drafts for WooCommerce.
- * Version: 0.1.3
+ * Version: 0.1.4
  * Plugin URI: https://github.com/jeptvar/regradedesk
  * Requires at least: 6.7
  * Requires PHP: 8.1

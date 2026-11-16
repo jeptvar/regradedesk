@@ -4,7 +4,7 @@ Turn a returned unit into a documented, single-unit resale draft in WooCommerce.
 
 Staff receive an item against its original order, inspect it, record wear and missing accessories, choose public photos, and prepare a separate product. The original order remains intact. Internal notes stay in the inspection record.
 
-**Status: 0.1.3 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
+**Status: 0.1.4 pilot.** Start on a staging store. This is an inspection-to-listing workbench, not a returns authorization, refund, repair, or warehouse system.
 
 **New to RegradeDesk?** Follow the [step-by-step walkthrough with screenshots](https://github.com/jeptvar/regradedesk/blob/main/docs/walkthrough.md), from receiving a returned item to reviewing its resale draft.
 
@@ -45,6 +45,8 @@ Requirements: WordPress 6.7+, WooCommerce 9.5+, PHP 8.1+, and MySQL/MariaDB supp
 Receipt submissions carry an idempotency identifier. A database lock serializes receipt counts per original line, and a separate lock serializes each inspection's saves and draft creation. A version field rejects stale edits.
 
 Draft creation reserves a product ID and links it to the inspection in one database transaction, then populates that same draft through WooCommerce. If a hook interrupts preparation, the record shows **Preparation incomplete**. Fix the cause and retry from the inspection. An unfinished draft cannot be published while RegradeDesk is active. Do not publish incomplete placeholders after deactivating the plugin.
+
+If saved inputs need correction, choose **Repair inspection**, replace unavailable photos or correct the details, and select **Save repairs**. Then select **Retry draft preparation**. Repairs retain the same reserved product and do not release the receipt allowance. The retry replaces that draft's listing fields using the repaired inspection. Completed inspections remain frozen. Unsaved inspection changes trigger a browser warning when navigating away or reloading; saving the form proceeds without a warning.
 
 After successful preparation, repeated requests return the same product without resetting stock or content. If a linked product is trashed or deleted, RegradeDesk refuses to create a replacement. Restore it from Trash or a backup. These guarantees assume standard WordPress/WooCommerce behavior: third-party hooks that explicitly commit or alter transactions, database proxies that change connections, or direct SQL edits are unsupported.
 

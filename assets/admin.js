@@ -6,19 +6,33 @@
     const status = document.getElementById('ss-photo-status');
     const approval = document.querySelector('[name="photos_confirmed"]');
     const create = document.getElementById('ss-create-draft');
+    const inspectionForm = field.form;
+    const snapshot = function () { return JSON.stringify(Array.from(new FormData(inspectionForm).entries())); };
+    const saved = snapshot();
+    const warnBeforeLeaving = function (event) {
+        event.preventDefault();
+        event.returnValue = '';
+    };
     const markDirty = function () {
-        if (create && !field.closest('fieldset').disabled) {
-            create.disabled = true;
-            document.getElementById('ss-unsaved').textContent = secondShelf.unsaved;
+        const dirty = !field.closest('fieldset').disabled && snapshot() !== saved;
+        window.removeEventListener('beforeunload', warnBeforeLeaving);
+        if (dirty) window.addEventListener('beforeunload', warnBeforeLeaving);
+        if (create) {
+            create.disabled = dirty;
+            document.getElementById('ss-unsaved').textContent = dirty ? secondShelf.unsaved : '';
         }
     };
     // The decision control lives in the sidebar and belongs to the form via its form attribute.
-    const inspectionForm = field.form;
     const onEdit = function (event) {
         if (event.target.form === inspectionForm) markDirty();
     };
     document.addEventListener('input', onEdit);
     document.addEventListener('change', onEdit);
+    inspectionForm.addEventListener('submit', function () {
+        window.removeEventListener('beforeunload', warnBeforeLeaving);
+    });
+    // Re-arm the warning when Back restores a form after a rejected submission.
+    window.addEventListener('pageshow', markDirty);
     let frame;
     $('#ss-select-photos').on('click', function () {
         if (!frame) {

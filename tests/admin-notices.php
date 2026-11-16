@@ -27,7 +27,8 @@ $checks = 0;
 foreach ( array( $admins[0]->ID, $subscriber ) as $user_id ) {
     wp_set_current_user( $user_id );
     foreach ( array( 'plugins', 'dashboard', 'edit-product', 'woocommerce_page_second-shelf' ) as $screen_id ) {
-        set_current_screen( $screen_id );
+        // Test notice visibility without firing unrelated WooCommerce onboarding redirects.
+        $GLOBALS['current_screen'] = WP_Screen::get( $screen_id );
         ob_start();
         foreach ( $notice_callbacks as $hook ) {
             call_user_func( $hook['function'] );

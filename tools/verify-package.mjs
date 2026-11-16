@@ -38,12 +38,16 @@ try {
     console.log(wp('eval', 'echo PHP_VERSION;'));
     for (const scenario of ['missing', 'legacy', 'resolved']) {
         const skipped = scenario === 'missing' ? 'regradedesk,woocommerce' : 'regradedesk';
-        console.log(wp(`--skip-plugins=${skipped}`, 'eval-file', '/second-shelf-tests/admin-notices.php', scenario));
+        const result = wp(`--skip-plugins=${skipped}`, 'eval-file', '/second-shelf-tests/admin-notices.php', scenario);
+        if (!result.includes(`Success: 8 admin notice assertions passed (${scenario}).`)) throw new Error(`Notice checks did not complete: ${scenario}`);
+        console.log(result);
     }
     for (const hpos of ['no', 'yes']) {
         wp('wc', minimum ? 'cot' : 'hpos', 'sync');
         wp('option', 'update', 'woocommerce_custom_orders_table_enabled', hpos);
         const result = wp('eval-file', '/second-shelf-tests/integration.php');
+        const storage = hpos === 'yes' ? 'HPOS' : 'legacy';
+        if (!new RegExp(`Success: \\d+ checks passed; storage=${storage}`).test(result)) throw new Error(`Integration checks did not complete: ${storage}`);
         console.log(`HPOS ${hpos}: ${result}`);
     }
     if (!minimum) {

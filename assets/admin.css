@@ -44,7 +44,7 @@
 .ss-badge { display: inline-block; padding: 4px 8px; border-radius: 3px; background: #e9eaeb; color: #3c434a; font-size: 12px; line-height: 1.5; }
 .ss-ready { background: #e5f2e8; color: #245b32; }
 .ss-listed { background: #e5eff8; color: #174f7a; }
-.ss-building { background: #fcf0ce; color: #674b0c; }
+.ss-building, .ss-repairing { background: #fcf0ce; color: #674b0c; }
 .ss-rejected { background: #f7e7e7; color: #8a2424; }
 .ss-table-footer { display: flex; height: auto; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
 .ss-pagination { display: flex; align-items: center; gap: 6px; }

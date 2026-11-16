@@ -79,7 +79,9 @@ wp_untrash_post( $draft_id );
 
 // Simulate a hook failure after draft reservation, then retry the same durable product ID.
 $retry_id = W::receive( $order->get_id(), $item_id, wp_generate_uuid4() );
-W::save( $retry_id, 1, $input );
+$missing_file = wp_upload_bits( 'ss-repair.png', null, base64_decode( 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aONsAAAAASUVORK5CYII=' ) );
+$missing_photo = wp_insert_attachment( array( 'post_title' => 'Repair fixture', 'post_mime_type' => 'image/png', 'post_status' => 'inherit' ), $missing_file['file'] );
+W::save( $retry_id, 1, array_merge( $input, array( 'photo_ids' => (string) $missing_photo ) ) );
 $failure = static function ( $p ) {
     if ( $p->get_meta( '_second_shelf_unit' ) ) {
         throw new RuntimeException( 'Injected product save failure' );
@@ -92,7 +94,34 @@ $retry_row = W::get( $retry_id );
 $assert( $retry_row['state'] === 'building' && $retry_row['product_id'] > 0, 'Interrupted draft has durable reservation' );
 wp_update_post( array( 'ID' => $retry_row['product_id'], 'post_status' => 'publish' ) );
 $assert( get_post_status( $retry_row['product_id'] ) === 'draft', 'Incomplete draft cannot be published' );
-$assert( W::create_draft( $retry_id, (int) $retry_row['version'] ) === (int) $retry_row['product_id'], 'Interrupted save resumes same draft' );
+wp_delete_attachment( $missing_photo, true );
+$throws( static fn() => W::create_draft( $retry_id, (int) $retry_row['version'] ), 'photo is unavailable' );
+$throws( static fn() => W::repair( $retry_id, 2 ), 'Only an incomplete' );
+$deny_reserved = static function ( $caps, $cap, $user_id, $args ) use ( $retry_row ) {
+    return $cap === 'edit_post' && (int) ( $args[0] ?? 0 ) === (int) $retry_row['product_id'] ? array( 'do_not_allow' ) : $caps;
+};
+add_filter( 'map_meta_cap', $deny_reserved, 10, 4 );
+$throws( static fn() => W::repair( $retry_id, (int) $retry_row['version'] ), 'cannot edit' );
+remove_filter( 'map_meta_cap', $deny_reserved );
+W::repair( $retry_id, (int) $retry_row['version'] );
+$repair_row = W::get( $retry_id );
+$assert( $repair_row['state'] === 'repairing' && $repair_row['product_id'] === $retry_row['product_id'], 'Repair retains the original reservation' );
+$throws( static fn() => W::create_draft( $retry_id, (int) $repair_row['version'] ), 'Save a ready' );
+wp_update_post( array( 'ID' => $retry_row['product_id'], 'post_status' => 'publish' ) );
+$assert( get_post_status( $retry_row['product_id'] ) === 'draft', 'Product stays unpublishable during repairs' );
+$throws( static fn() => W::save( $retry_id, (int) $retry_row['version'], $input ), 'Another save' );
+$throws( static fn() => W::save( $retry_id, (int) $repair_row['version'], array_merge( $input, array( 'state' => 'received' ) ) ), 'Complete the repaired' );
+$throws( static fn() => W::save( $retry_id, (int) $repair_row['version'], array_merge( $input, array( 'photo_ids' => (string) $missing_photo ) ) ), 'photo is unavailable' );
+add_filter( 'map_meta_cap', $deny_reserved, 10, 4 );
+$throws( static fn() => W::save( $retry_id, (int) $repair_row['version'], $input ), 'cannot edit' );
+remove_filter( 'map_meta_cap', $deny_reserved );
+W::save( $retry_id, (int) $repair_row['version'], $input );
+$repaired = W::get( $retry_id );
+$assert( $repaired['state'] === 'building' && $repaired['product_id'] === $retry_row['product_id'], 'Saving repairs preserves incomplete state and product ID' );
+$throws( static fn() => W::create_draft( $retry_id, (int) $retry_row['version'] ), 'Save a ready' );
+$assert( W::create_draft( $retry_id, (int) $repaired['version'] ) === (int) $retry_row['product_id'], 'Repaired inspection finishes the same draft' );
+$assert( (int) wc_get_product( $retry_row['product_id'] )->get_image_id() === $photo, 'Replacement photo reaches the reserved product' );
+$throws( static fn() => W::repair( $retry_id, (int) W::get( $retry_id )['version'] ), 'Only an incomplete' );
 
 $rejected = W::receive( $order->get_id(), $item_id, wp_generate_uuid4() );
 W::save( $rejected, 1, array( 'state' => 'rejected', 'private_notes' => 'Damaged cord' ) );
@@ -129,6 +158,7 @@ $throws( static fn() => W::get( $id ), 'permission' );
 $throws( static fn() => W::receive( $order->get_id(), $item_id, wp_generate_uuid4() ), 'permission' );
 $throws( static fn() => W::save( $id, 1, $input ), 'permission' );
 $throws( static fn() => W::create_draft( $id, 1 ), 'permission' );
+$throws( static fn() => W::repair( $retry_id, 1 ), 'permission' );
 wp_set_current_user( $admins[0]->ID );
 $server = rest_get_server();
 $routes = array_filter( array_keys( $server->get_routes() ), static fn( $route ) => str_contains( $route, 'second-shelf' ) || str_contains( $route, 'second_shelf' ) );

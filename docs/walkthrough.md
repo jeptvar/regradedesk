@@ -78,7 +78,7 @@ For a staging trial, publish there and complete a test purchase using your store
 | Order not found | Use the numeric database ID, not a formatted order number. |
 | No units left to record | Check existing inspections for the order line, including rejected units. Do not create another record for the same physical unit. |
 | Create resale draft is unavailable | Save as Ready for draft with a title, condition, positive price, disclosure, at least one photo and both confirmations. Save any subsequent edits before creating the draft. |
-| Preparation incomplete | Investigate the reported error, then use Retry draft preparation. It finishes the same reserved draft. |
+| Preparation incomplete | Investigate the reported error, then use Retry draft preparation. In 0.1.4+, use Repair inspection to replace missing photos or correct details, select Save repairs, then retry. It finishes the same reserved draft and replaces its listing fields with the saved inspection. |
 | Linked product is missing or trashed | Restore the linked product from Trash or a backup. RegradeDesk will not create a replacement automatically. |
 
 For help, use the [WordPress.org support forum](https://wordpress.org/support/plugin/regradedesk/). Include plugin, WordPress and WooCommerce versions, the step that failed and the error text. Remove customer information from screenshots and reports.
