@@ -10,6 +10,7 @@
  * WC requires at least: 9.5
  * WC tested up to: 11.2.1
  * Author: jeptvar
+ * Author URI: https://jtvargas.com/
  * License: GPL-2.0-or-later
  * Text Domain: regradedesk
  */
